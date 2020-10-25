@@ -2,6 +2,7 @@ import re               #To lookup Youtube links
 import urllib.parse
 import urllib.request
 import os
+from myfiles.secrets import bot_token_id
 
 import discord
 import youtube_dl                   #Download Youtube link
@@ -9,44 +10,53 @@ from discord.ext import commands
 import collections                  #For deque method in lists to make a Q
 
 bot = commands.Bot(command_prefix = '`')
-
 client = discord.Client()
 
-TOKEN = 'NzMwNjAyNDI1ODA3MDExODQ3.XwZ4ow.kkUqM9YSFyDq7o8vY4AhQDt2E-g'
+TOKEN = bot_token_id
 
-class Youtube:
-    def __init__(self, arg):
-        self.arg = arg
-
-    def get_yt_video_code(self):
-        query_string = urllib.parse.urlencode({"search_query" : self.arg})
+class Yutoob:
+    def get_yt_video_code(self, arg):
+        query_string = urllib.parse.urlencode({"search_query" : arg})
         html_content = urllib.request.urlopen("https://www.youtube.com/results?" + query_string)
         search_results = re.findall(r'"videoId":"(.{11})', html_content.read().decode())        #Find song ID on Youtube
-        return search_results
+        return search_results[0]
 
-    def add_to_q(self):
+    def add_to_q(self, words):
         with open("myfiles/songQ.txt", "a+") as file_object:
                 video_id = file_object.read().splitlines()
 
                 # Check if value exists, if not, then append to file
-                if self.get_yt_video_code not in video_id:
+                if self.get_yt_video_code(words) not in video_id:
                     file_object.seek(0)             # Move read cursor to the start of file.
                     data = file_object.read(10)     # If file is not empty then append '\n'
                     if len(data) > 0:
                         file_object.write("\n")     # Append text at the end of file
-                    file_object.write(self.get_yt_video_code)
+                    file_object.write(self.get_yt_video_code(words))
     
-    def get_music_url(self):
+    def read_q(self):
+        with open("myfiles/songQ.txt", "r") as file_object:
+                video_id = file_object.read().splitlines()
+        return video_id
+
+
+    def get_music_url(self,index):
         with open("myfiles/songQ.txt", "r") as f:
             video_id = f.read().splitlines()
 
-        full_link = ('https://www.youtube.com/watch?v=' + video_id[self.index])
+        full_link = ('https://www.youtube.com/watch?v=' + video_id[index])
 
         return full_link
 
-    def download_from_yt(self):
+    def play_q(self):
+        for fname in os.listdir("myfiles/"):
+            # Apply file type filter   
+            if fname.endswith(song + '.webm'):
+                file = fname
+        print(file)
+
+    def download_from_yt(self, index = 0):
         with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-            ydl.download([self.get_music_url])
+            ydl.download([self.get_music_url(index)])
 
 #youtube Video download settings
 ydl_opts = {
@@ -57,7 +67,7 @@ ydl_opts = {
            ],
        'keepvideo': True,
        'default_search': 'auto',
-   }
+    }
 
 Q = collections.deque()
 username = collections.deque()
@@ -77,58 +87,61 @@ async def leave(ctx):
 
 
 
+@bot.command()
+async def jump(ctx, index):
+    run = Yutoob.get_music_url(index)
+
+
+@bot.command(aliases = ['classp'])
+async def q(ctx):
+    hmm = Yutoob()
+    q = hmm.read_q()
+    
+    await ctx.send(f"``` {q} ```")
+
+
 @bot.command(aliases = ['p'])
 async def play(ctx, *, input):
 
-    query_string = urllib.parse.urlencode({"search_query" : input})
-    html_content = urllib.request.urlopen("https://www.youtube.com/results?" + query_string)
-    search_results = re.findall(r'"videoId":"(.{11})', html_content.read().decode())        #Find song ID on Youtube
+    hmm = Yutoob()
+
+    hmm.add_to_q(input)
+
+        # username.append(ctx.message.author)
+
+    np = hmm.read_q()
+
+    await ctx.send('now playing: ' + "str(index)" + ' link=> https://www.youtube.com/watch?v=' + np[0])
+
+    hmm.download_from_yt()
     
+    await ctx.send(f'Download Complete')
 
-    exists = 1                  #checking if song exists in Q
-    for song in Q:
-        if song == search_results[0]:
-            exists = 0          #0 so if there is a song, song is not appended into the queue
-    
-    if exists == 1 :
-        Q.append(search_results[0])
-        #print(Q)
-        username.append(ctx.message.author)
-
-    index = 1
-    
-    for song in Q:  #downloading all songs from Q -> try better way, by making it download on new track
-        download = ('https://www.youtube.com/watch?v=' + song)*(input[0:5] != 'https') + input*(input[0:5] == 'https')
-
-        await ctx.send('now playing: ' + str(index) + ' link=> https://www.youtube.com/watch?v=' + song)
-
-        index = index + 1
-
-        with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-            ydl.download([download])
-    
-        await ctx.send(f'Download Complete')
-
-        # Repeat for each file in the directory  
-        for fname in os.listdir():
-            # Apply file type filter   
-            if fname.endswith(song + '.webm'):
-                file = fname
-        print(file)
+    # Repeat for each file in the directory  
+    for fname in os.listdir("myfiles/"):
+        # Apply file type filter   
+        if fname.endswith(np[0] + '.webm'):
+            file = fname
+    print(file)
 
 
-        source = await discord.FFmpegOpusAudio.from_probe(file, method='fallback')
-        ctx.voice_client.play(source)
-    
+    source = await discord.FFmpegOpusAudio.from_probe(file, method='fallback')
+    ctx.voice_client.play(source)
+
+@bot.command(aliases = ['m'])
+async def vcmute(ctx):
+    vc = ctx.author.voice.channel
+    for member in vc.members:
+        await member.edit(mute=True)
+
+@bot.command(aliases = ['um'])
+async def vcunmute(ctx):
+    vc = ctx.author.voice.channel
+    for member in vc.members:
+        await member.edit(mute=False)
 
 @bot.event
 async def on_ready():
     print('Bot is ready.')
+
 bot.run(TOKEN)
-
-
-x =2
-y= 3
-z= 4
-
-print("yo wassup")
