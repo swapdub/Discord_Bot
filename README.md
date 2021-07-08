@@ -1,4 +1,4 @@
-##Discord Music bot
+<h1>Discord Music bot</h1>
 Currently using code on replit.com to run my bot. To run it's server visit: 
 https://www.replit.com/@swapdub/Discordbot#main.py
 
