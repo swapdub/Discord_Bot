@@ -1,3 +1,4 @@
+# to add bot to your server click here : https://discord.com/oauth2/authorize?client_id=730602425807011847&permissions=8&scope=bot
 import re
 import os
 import json
@@ -7,8 +8,9 @@ import pandas as pd
 
 import discord
 from discord.ext import commands
+# from keep_alive import keep_alive
 
-from myfiles.secrets import bot_token_id as my_secret
+my_secret = os.environ['TOKEN']
 
 
 # Discord added this as an extra permission to allow retrieving members related data
@@ -31,9 +33,9 @@ def get_quote():
 
 def get_yt_video_code(arg):
     html_content = requests.get("https://www.youtube.com/results?search_query=" + arg)
-    search_results = re.search(r'"videoId":"(.{11})', html_content.text)  #Find song ID on Youtube
+    search_results = re.findall(r'"videoId":"(.{11})"', html_content.text)  #Find song ID on Youtube
 
-    return search_results[0]
+    return search_results[1]
 
 
 @bot.event
@@ -134,10 +136,11 @@ async def test(ctx, *, arg):
     await ctx.send(arg)
 
 
-que = []
+que = {}
+q_index = 0
 @bot.command(aliases=['p'])
 async def play(ctx, *, arg):
-    global df, que
+    global df, que, q_index
 
     vc = ctx.author.voice.channel
 
@@ -157,14 +160,7 @@ async def play(ctx, *, arg):
     # await ctx.voice_client.disconnect()
     # vc = ctx.author.voice.channel
     # await vc.connect()
-
-    songID = get_yt_video_code(arg)
-    ydl_opts = {
-        'format': 'bestaudio/best',
-        'postprocessor_args': ['-ar', '16000'],
-        'keepvideo': True,
-        'default_search': 'auto',
-    }
+    # songID = get_yt_video_code(arg)
 
     df = df.append(
         {
@@ -174,35 +170,77 @@ async def play(ctx, *, arg):
             # "YT name": song_info["title"]
         },
         ignore_index=True)
-    
-    que.append(songID) 
-    print(df)
-    
-    with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-        song_info = ydl.extract_info("https://www.youtube.com/watch?v=" + get_yt_video_code(que[0]), download=False)
-    
-    vcclient = ctx.voice_client
-    vcclient.play(discord.FFmpegPCMAudio(song_info["url"]))
-    vcclient.source = discord.PCMVolumeTransformer(vcclient.source)
-    vcclient.source.volume = 0.5
-    print(dir(vcclient))
 
-    await ctx.send(f"```Now Playing: {song_info['title']} [{str(ctx.author)}] ```")
+    
+    
+    ydl_opts = {
+        'format': 'bestaudio/best',
+        'postprocessor_args': ['-ar', '16000'],
+        'keepvideo': True,
+        'default_search': 'auto',
+    }
+    with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+        song_info = ydl.extract_info("https://www.youtube.com/watch?v=" + get_yt_video_code(arg), download=False)
+    
+    # vcclient.stop()
+    que.append(song_info)
+    vcclient = ctx.voice_client
+    if not vcclient.is_playing():
+      vcclient.play(discord.FFmpegPCMAudio(que[q_index]["url"]))
+      vcclient.source = discord.PCMVolumeTransformer(vcclient.source)
+      vcclient.source.volume = 0.5
+      await ctx.send(f"```Now Playing: {song_info['title']} [{str(ctx.author)}] ```")
+    print(vcclient.is_playing())
+
 
 @bot.command()
 async def ping(ctx):
     await ctx.send(f"{ctx.voice_client.average_latency * 1000} ms")
 
+@bot.command(aliases=['n'])
+async def next(ctx):
+    global q_index
+    
+    q_index += 1
+    vcclient = ctx.voice_client
+
+    if vcclient.is_playing():
+      vcclient.stop()
+    vcclient.play(discord.FFmpegPCMAudio(que[q_index]["url"]))
+    vcclient.source = discord.PCMVolumeTransformer(vcclient.source)
+    vcclient.source.volume = 0.5
+
+    await ctx.send(f"```Now Playing: {que[q_index]['title']} [{str(ctx.author)}] ```")
+
+
+@bot.command()
+async def prev(ctx):
+    global q_index
+
+    q_index -= 1
+
+    vcclient = ctx.voice_client
+    if vcclient.is_playing():
+      vcclient.stop()
+    vcclient.play(discord.FFmpegPCMAudio(que[q_index]["url"]))
+    vcclient.source = discord.PCMVolumeTransformer(vcclient.source)
+    vcclient.source.volume = 0.5
+
+    await ctx.send(f"```Now Playing: {que[q_index]['title']} [{str(ctx.author)}] ```")
+
 @bot.command(aliases=['q'])
 async def queue(ctx):
     await ctx.send(f"```Current queue:\n{df}```")
+    # await ctx.send(f"```Current queue:\n{que}```")
 
 
 @bot.command(aliases=['r'])
 async def rm(ctx, num: int):
+    global df, que
     try:
         print(num)
-        df.drop(num)
+        df.pop(num)
+        que.pop(num)
     except ValueError:
         await ctx.send("Whoops, numbers only please!!")
         return
@@ -228,5 +266,6 @@ async def vcunmute(ctx):
         await member.edit(mute=False)
 
 
+# keep_alive()
 bot.run(my_secret)
 # client.run(my_secret)
