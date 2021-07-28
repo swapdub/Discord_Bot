@@ -107,7 +107,6 @@ async def on_message(arg):
 @bot.command(aliases=['j'])
 async def join(ctx):
     # Connect directly
-    print(ctx.guild)
     try:
         vc = ctx.author.voice.channel
         await vc.connect()
@@ -126,7 +125,6 @@ async def join(ctx):
 
 @bot.command(aliases=['l'])
 async def leave(ctx):
-    print(ctx.author)
     try:
         await ctx.voice_client.disconnect()
     except:
@@ -162,6 +160,8 @@ async def play(ctx, *, arg):
       vcclient.source = discord.PCMVolumeTransformer(vcclient.source)
       vcclient.source.volume = 0.5
       await ctx.send(f"```Now Playing: {que.nowplaying(ctx)} [{que.nowplaying(ctx, 'user')}] ```")
+    else:
+      await ctx.send(f"```Added to queue: {que.nowplaying(ctx)} [{que.nowplaying(ctx, 'user')}] ```")
     # print(vcclient.is_playing())
 
 
@@ -179,7 +179,7 @@ async def next(ctx):
     
     index = que.index[ctx.guild]
 
-    if index < len(my_que):
+    if index < len(my_que) - 1:
         index = que.index[ctx.guild] + 1
     
     que.index[ctx.guild] = index
@@ -215,21 +215,13 @@ async def prev(ctx):
 
 @bot.command(aliases=['q'])
 async def queue(ctx):
-    my_que = que.guild[ctx.guild]
-    name = []
-    for n["name"] in my_que:
-        name.append(n)
-
-    await ctx.send(f"```Current queue:\n{name}```")
+    await ctx.send(f"```Current queue:\n{que.my_que(ctx)}```")
 
 
 @bot.command(aliases=['r'])
 async def rm(ctx, num: int):
-    global df, que
     try:
-        print(num)
-        df.pop(num)
-        que.pop(num)
+        que.delete_entry(num)
     except ValueError:
         await ctx.send("Whoops, numbers only please!!")
         return
@@ -239,6 +231,9 @@ async def rm(ctx, num: int):
         await ctx.send("Whoops, something went wrong!!")
         return
 
+@bot.command(aliases=[])
+async def clear(ctx):
+    que.clear_que(ctx)
 
 @bot.command(aliases=['m'])
 async def vcmute(ctx):

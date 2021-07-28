@@ -8,6 +8,7 @@ class Q():
   guild = dict()
   que = deque()
   index = dict()
+  entry = dict()
 
   ydl_opts = {
         'format': 'bestaudio/best',
@@ -44,14 +45,15 @@ class Q():
     if ctx.guild not in self.guild:
       self.guild[ctx.guild] = []
       self.index[ctx.guild] = 0
+      self.guild[ctx.guild] = self.que
     else: 
       self.guild[ctx.guild] = self.que
-    
     return self.entry["url"]
 
 
   def delete_entry(self, num):
     self.que.pop[num]
+    self.guild[ctx.guild].pop(num)
     self.guild[ctx.guild] = self.que
   
   def next_track(self, ctx):
@@ -72,8 +74,16 @@ class Q():
     index = self.index[ctx.guild]
     return self.que[index][arg]
 
-  def my_que(self):
-    
+  def my_que(self, ctx):
+    formattedQ = []
+
+    for entry in self.guild[ctx.guild]:
+      string = f"{entry['name']} added by {entry['user']}"
+      formattedQ.append(string)
+      
+    formattedQ = "\n".join(formattedQ)
+
+    return formattedQ
 
 
 def func(optional = 1):
