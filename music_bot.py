@@ -1,16 +1,17 @@
 # to add bot to your server click here : https://discord.com/oauth2/authorize?client_id=730602425807011847&permissions=8&scope=bot
 import re
 import os
-import json
 import requests
 import youtube_dl
 import pandas as pd
+from music_q import Q
+import secret
 
 import discord
 from discord.ext import commands
 # from keep_alive import keep_alive
 
-my_secret = os.environ['TOKEN']
+my_secret = secret.discord_token
 
 
 # Discord added this as an extra permission to allow retrieving members related data
@@ -22,6 +23,7 @@ bot = commands.Bot(command_prefix='`', intents = intents)
 
 df = pd.DataFrame()
 count = 0
+que = Q()
 
 def get_quote():
     response = requests.get("https://zenquotes.io/api/random")
@@ -136,11 +138,9 @@ async def test(ctx, *, arg):
     await ctx.send(arg)
 
 
-que = {}
-q_index = 0
 @bot.command(aliases=['p'])
 async def play(ctx, *, arg):
-    global df, que, q_index
+    # global df, que, q_index
 
     vc = ctx.author.voice.channel
 
@@ -153,85 +153,74 @@ async def play(ctx, *, arg):
     except Exception as e:
         print(e)
         pass
-
-    # # Disconnect then connect to new channel
-    # except Exception as e:
-    #   print(e)
-    # await ctx.voice_client.disconnect()
-    # vc = ctx.author.voice.channel
-    # await vc.connect()
-    # songID = get_yt_video_code(arg)
-
-    df = df.append(
-        {
-            'Server': ctx.guild,
-            'Song': arg,
-            "Author": ctx.author,
-            # "YT name": song_info["title"]
-        },
-        ignore_index=True)
-
     
+    url = que.add_entry(ctx, arg)
     
-    ydl_opts = {
-        'format': 'bestaudio/best',
-        'postprocessor_args': ['-ar', '16000'],
-        'keepvideo': True,
-        'default_search': 'auto',
-    }
-    with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-        song_info = ydl.extract_info("https://www.youtube.com/watch?v=" + get_yt_video_code(arg), download=False)
-    
-    # vcclient.stop()
-    que.append(song_info)
     vcclient = ctx.voice_client
     if not vcclient.is_playing():
-      vcclient.play(discord.FFmpegPCMAudio(que[q_index]["url"]))
+      vcclient.play(discord.FFmpegPCMAudio(url))
       vcclient.source = discord.PCMVolumeTransformer(vcclient.source)
       vcclient.source.volume = 0.5
-      await ctx.send(f"```Now Playing: {song_info['title']} [{str(ctx.author)}] ```")
-    print(vcclient.is_playing())
+      await ctx.send(f"```Now Playing: {que.nowplaying(ctx)} [{que.nowplaying(ctx, 'user')}] ```")
+    # print(vcclient.is_playing())
 
 
 @bot.command()
 async def ping(ctx):
     await ctx.send(f"{ctx.voice_client.average_latency * 1000} ms")
 
+@bot.command(aliases=['np'])
+async def nowplaying(ctx, *, arg = "name"):
+    await ctx.send(f"Now playing: {que.nowplaying(ctx, arg)}")
+
 @bot.command(aliases=['n'])
 async def next(ctx):
-    global q_index
+    my_que = que.guild[ctx.guild]
     
-    q_index += 1
+    index = que.index[ctx.guild]
+
+    if index < len(my_que):
+        index = que.index[ctx.guild] + 1
+    
+    que.index[ctx.guild] = index
+
     vcclient = ctx.voice_client
 
     if vcclient.is_playing():
       vcclient.stop()
-    vcclient.play(discord.FFmpegPCMAudio(que[q_index]["url"]))
+    vcclient.play(discord.FFmpegPCMAudio(my_que[index]["url"]))
     vcclient.source = discord.PCMVolumeTransformer(vcclient.source)
     vcclient.source.volume = 0.5
 
-    await ctx.send(f"```Now Playing: {que[q_index]['title']} [{str(ctx.author)}] ```")
+    await ctx.send(f"```Now Playing: {que.nowplaying(ctx)} [{que.nowplaying(ctx, 'user')}] ```")
 
 
-@bot.command()
+@bot.command(aliases=[])
 async def prev(ctx):
-    global q_index
-
-    q_index -= 1
+    index = que.index[ctx.guild]
+    # index -= 1
+    if index > 0: 
+        index -= 1
+    que.index[ctx.guild] = index
+    my_que = que.guild[ctx.guild]
 
     vcclient = ctx.voice_client
     if vcclient.is_playing():
       vcclient.stop()
-    vcclient.play(discord.FFmpegPCMAudio(que[q_index]["url"]))
+    vcclient.play(discord.FFmpegPCMAudio(my_que[index]["url"]))
     vcclient.source = discord.PCMVolumeTransformer(vcclient.source)
     vcclient.source.volume = 0.5
 
-    await ctx.send(f"```Now Playing: {que[q_index]['title']} [{str(ctx.author)}] ```")
+    await ctx.send(f"```Now Playing: {que.nowplaying(ctx)} [{que.nowplaying(ctx, 'user')}] ```")
 
 @bot.command(aliases=['q'])
 async def queue(ctx):
-    await ctx.send(f"```Current queue:\n{df}```")
-    # await ctx.send(f"```Current queue:\n{que}```")
+    my_que = que.guild[ctx.guild]
+    name = []
+    for n["name"] in my_que:
+        name.append(n)
+
+    await ctx.send(f"```Current queue:\n{name}```")
 
 
 @bot.command(aliases=['r'])
