@@ -1,9 +1,6 @@
 # to add bot to your server click here : https://discord.com/oauth2/authorize?client_id=730602425807011847&permissions=8&scope=bot
-import re
 import os
-import requests
-import youtube_dl
-import pandas as pd
+
 from music_q import Q
 import secret
 
@@ -21,8 +18,6 @@ intents = discord.Intents().all()
 # client = discord.Client()
 bot = commands.Bot(command_prefix='`', intents = intents)
 
-df = pd.DataFrame()
-count = 0
 que = Q()
 
 def get_quote():
@@ -123,7 +118,7 @@ async def join(ctx):
         await vc.connect()
 
 
-@bot.command(aliases=['l'])
+@bot.command(aliases=['l', 'die'])
 async def leave(ctx):
     try:
         await ctx.voice_client.disconnect()
@@ -138,7 +133,6 @@ async def test(ctx, *, arg):
 
 @bot.command(aliases=['p'])
 async def play(ctx, *, arg):
-    # global df, que, q_index
 
     vc = ctx.author.voice.channel
 
@@ -152,16 +146,20 @@ async def play(ctx, *, arg):
         print(e)
         pass
     
-    url = que.add_entry(ctx, arg)
+    song = que.add_entry(ctx, arg)
     
     vcclient = ctx.voice_client
     if not vcclient.is_playing():
-      vcclient.play(discord.FFmpegPCMAudio(url))
-      vcclient.source = discord.PCMVolumeTransformer(vcclient.source)
-      vcclient.source.volume = 0.5
-      await ctx.send(f"```Now Playing: {que.nowplaying(ctx)} [{que.nowplaying(ctx, 'user')}] ```")
+        vcclient.play(discord.FFmpegPCMAudio(song["url"]))
+        vcclient.source = discord.PCMVolumeTransformer(vcclient.source)
+        vcclient.source.volume = 1
+        #using add entry because we want entry song only, no need for index
+        await ctx.send(f"```Now Playing: {song['name']} [{song['user']}] ```")
     else:
-      await ctx.send(f"```Added to queue: {que.nowplaying(ctx)} [{que.nowplaying(ctx, 'user')}] ```")
+        await ctx.send(f"```Added to Q: {song['name']} [{song['user']}] ```")
+
+    while not vcclient.is_playing():
+        await next(ctx)
     # print(vcclient.is_playing())
 
 
@@ -171,7 +169,10 @@ async def ping(ctx):
 
 @bot.command(aliases=['np'])
 async def nowplaying(ctx, *, arg = "name"):
-    await ctx.send(f"Now playing: {que.nowplaying(ctx, arg)}")
+    if ctx.voice_client.is_playing():
+        await ctx.send(f"Now playing: {que.nowplaying(ctx, arg)}")
+    else:
+        await ctx.send(f"No song playing rn")
 
 @bot.command(aliases=['n'])
 async def next(ctx):
@@ -190,8 +191,9 @@ async def next(ctx):
       vcclient.stop()
     vcclient.play(discord.FFmpegPCMAudio(my_que[index]["url"]))
     vcclient.source = discord.PCMVolumeTransformer(vcclient.source)
-    vcclient.source.volume = 0.5
+    vcclient.source.volume = 1
 
+    # Using Now playing because next follows index
     await ctx.send(f"```Now Playing: {que.nowplaying(ctx)} [{que.nowplaying(ctx, 'user')}] ```")
 
 
@@ -209,7 +211,7 @@ async def prev(ctx):
       vcclient.stop()
     vcclient.play(discord.FFmpegPCMAudio(my_que[index]["url"]))
     vcclient.source = discord.PCMVolumeTransformer(vcclient.source)
-    vcclient.source.volume = 0.5
+    vcclient.source.volume = 1
 
     await ctx.send(f"```Now Playing: {que.nowplaying(ctx)} [{que.nowplaying(ctx, 'user')}] ```")
 
@@ -221,13 +223,20 @@ async def queue(ctx):
 @bot.command(aliases=['r'])
 async def rm(ctx, num: int):
     try:
-        que.delete_entry(num)
+        que.delete_entry(ctx, num - 1)
+
+        #In case we remove the now playing song
+        #Using the next function will should get us to index 0
+        if num == 1:
+            que.index[ctx.guild] = -1
+
     except ValueError:
         await ctx.send("Whoops, numbers only please!!")
         return
     except KeyError:
         await ctx.send("Whoops, nothing to clear!!")
-    except:
+    except Exception as e:
+        print(e)
         await ctx.send("Whoops, something went wrong!!")
         return
 

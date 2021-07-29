@@ -48,21 +48,22 @@ class Q():
       self.guild[ctx.guild] = self.que
     else: 
       self.guild[ctx.guild] = self.que
-    return self.entry["url"]
+    return self.entry
 
 
-  def delete_entry(self, num):
-    self.que.pop[num]
-    self.guild[ctx.guild].pop(num)
-    self.guild[ctx.guild] = self.que
+  def delete_entry(self, ctx, num):
+    de = self.guild[ctx.guild]
+    del de[num]
   
   def next_track(self, ctx):
     self.index[ctx.guild] += 1
+    return self.index[ctx.guild]
     
   def prev_track(self, ctx):
     self.index[ctx.guild] -= 1
+    return self.index[ctx.guild]
 
-  def clear_que(self, ctx):
+  def clear_que(self, ctx, save = "n"):
     self.guild[ctx.guild] = []
     self.index[ctx.guild] = 0
 
@@ -70,26 +71,24 @@ class Q():
     return
 
   def nowplaying(self, ctx, arg = "name"):
-    # return self.guild[ctx.guild][0]
     index = self.index[ctx.guild]
     return self.que[index][arg]
 
   def my_que(self, ctx):
     formattedQ = []
+    count = 1
 
     for entry in self.guild[ctx.guild]:
-      string = f"{entry['name']} added by {entry['user']}"
+      string = f"{count}. {entry['name']} added by {entry['user']}"
       formattedQ.append(string)
+      count += 1
       
     formattedQ = "\n".join(formattedQ)
 
     return formattedQ
 
 
-def func(optional = 1):
-  print(optional)
 
-func()
 # l = "this is a sentence".split()
 # d = dict()
 # dl = dict()
