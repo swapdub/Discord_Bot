@@ -61,10 +61,12 @@ class Q():
     
   def prev_track(self, ctx):
     self.index[ctx.guild] -= 1
+
+
     return self.index[ctx.guild]
 
   def clear_que(self, ctx, save = "n"):
-    self.guild[ctx.guild] = []
+    self.guild[ctx.guild].clear()
     self.index[ctx.guild] = 0
 
   def url(self):

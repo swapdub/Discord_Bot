@@ -135,31 +135,36 @@ async def test(ctx, *, arg):
 async def play(ctx, *, arg):
 
     vc = ctx.author.voice.channel
+    song = que.add_entry(ctx, arg)
+    
 
     try:
         await vc.connect()
-
-    # # Dont do anything if error
-    except AttributeError:
+    except AttributeError: # Dont do anything if error
         pass
     except Exception as e:
         print(e)
         pass
     
-    song = que.add_entry(ctx, arg)
+
+    def after_song_end():
+        vcclient = ctx.voice_client
+        vcclient.play(discord.FFmpegPCMAudio(que.guild[ctx.guild][que.next_track(ctx)]["url"]), after = lambda x: after_song_end())
+
     
     vcclient = ctx.voice_client
     if not vcclient.is_playing():
-        vcclient.play(discord.FFmpegPCMAudio(song["url"]))
+        vcclient.play(discord.FFmpegPCMAudio(song["url"]), after= lambda x: after_song_end())
         vcclient.source = discord.PCMVolumeTransformer(vcclient.source)
         vcclient.source.volume = 1
+        
         #using add entry because we want entry song only, no need for index
         await ctx.send(f"```Now Playing: {song['name']} [{song['user']}] ```")
     else:
         await ctx.send(f"```Added to Q: {song['name']} [{song['user']}] ```")
 
-    while not vcclient.is_playing():
-        await next(ctx)
+    # while not vcclient.is_playing():
+    #     await next(ctx)
     # print(vcclient.is_playing())
 
 
@@ -176,22 +181,15 @@ async def nowplaying(ctx, *, arg = "name"):
 
 @bot.command(aliases=['n'])
 async def next(ctx):
-    my_que = que.guild[ctx.guild]
-    
-    index = que.index[ctx.guild]
-
-    if index < len(my_que) - 1:
-        index = que.index[ctx.guild] + 1
-    
-    que.index[ctx.guild] = index
+    def after_song_end():
+        vcclient = ctx.voice_client
+        vcclient.play(discord.FFmpegPCMAudio(que.guild[ctx.guild][que.next_track(ctx)]["url"]), after = lambda x: after_song_end())
 
     vcclient = ctx.voice_client
 
     if vcclient.is_playing():
       vcclient.stop()
-    vcclient.play(discord.FFmpegPCMAudio(my_que[index]["url"]))
-    vcclient.source = discord.PCMVolumeTransformer(vcclient.source)
-    vcclient.source.volume = 1
+    vcclient.play(discord.FFmpegPCMAudio(que.guild[ctx.guild][que.next_track(ctx)]["url"]), after = lambda x: after_song_end())
 
     # Using Now playing because next follows index
     await ctx.send(f"```Now Playing: {que.nowplaying(ctx)} [{que.nowplaying(ctx, 'user')}] ```")
