@@ -7,4 +7,10 @@ Repl.it allows you to run the bot on their server without having to download any
 <br/>
 <br/>
 To add my bot to your server click on the link below: 
-https://discord.com/oauth2/authorize?client_id=730602425807011847&permissions=8&scope=bot
+https://discord.com/oauth2/authorize?client_id=730602425807011847&permissions=8&scope=
+
+In-Progress Features and Known Bugs:
+- Queue out of index when cleared or next enough times
+- No seek for now playing music yet
+- Bot sends too many reply messages, need to change that to editable embeds for better visuals
+
