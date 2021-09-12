@@ -11,7 +11,9 @@ To use this code for your own bot follow the steps below if you have Python inst
 - Paste the token for your bot in the variable "my_secrets" at the top of main.py file.
 <br> 
 (You can find your token in the dev pages on discord.com)
-- Run the file main.py
+- Run the file main.
+Windows command: `python main.py`
+Linux command: `python3 main.py`
 
 
 ## Option 2
