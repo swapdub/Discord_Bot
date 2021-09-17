@@ -83,10 +83,11 @@ class Q:
 
         return self.index[ctx.guild]
 
-    def clear_que(self, ctx, save = 'n'):
-        if save == 'y' or save == 'yes':
+    def clear_que(self, ctx, save = 'y'):
+        if save.lower == 'y' or save.lower == 'yes':
             print(save)
             self.save_data(ctx)
+        print(save)
         self.guild[ctx.guild].clear()
         self.index[ctx.guild] = 0
 
