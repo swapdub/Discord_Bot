@@ -120,7 +120,7 @@ async def join(ctx):
 
 
 @bot.command(aliases=['l', 'die'])
-async def leave(ctx, arg = 'n'):
+async def leave(ctx, arg = 'y'):
     que.clear_que(ctx, arg)
     try:
         await ctx.voice_client.disconnect()

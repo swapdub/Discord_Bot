@@ -4,6 +4,7 @@ import requests
 import datetime
 from collections import deque
 import youtube_dl
+import os
 
 # Logic : We have a dict with keys as 'Discord Server(ctx.guild)' name. 
 #         Value is the que which is deque from collections library optimized 
@@ -83,7 +84,7 @@ class Q:
 
         return self.index[ctx.guild]
 
-    def clear_que(self, ctx, save = 'y'):
+    def clear_que(self, ctx, save):
         if save.lower == 'y' or save.lower == 'yes':
             print(save)
             self.save_data(ctx)
@@ -114,6 +115,10 @@ class Q:
     def save_data(self, ctx):
         # A function to save user playlist statistics and data to 
         # json file with the following formatting 
+        if not os.path.isfile("discord_playlist.json"):
+            f = open("myfile.txt", "x")
+            f.write("[ \n\n] ")
+            f.close()
 
         with open("discord_playlist.json", "a") as file:
             # Delete last ']' character
