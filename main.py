@@ -1,9 +1,10 @@
 # to add bot to your server click here : https://discord.com/oauth2/authorize?client_id=730602425807011847&permissions=8&scope=bot
 import os
+import re
 
 from music_q import Q
 import secret
-
+import json
 import discord
 from discord.ext import commands
 # from keep_alive import keep_alive
@@ -119,7 +120,8 @@ async def join(ctx):
 
 
 @bot.command(aliases=['l', 'die'])
-async def leave(ctx):
+async def leave(ctx, arg = 'n'):
+    que.clear_que(ctx, arg)
     try:
         await ctx.voice_client.disconnect()
     except:
@@ -162,10 +164,6 @@ async def play(ctx, *, arg):
         await ctx.send(f"```Now Playing: {song['name']} [{song['user']}] ```")
     else:
         await ctx.send(f"```Added to Q: {song['name']} [{song['user']}] ```")
-
-    # while not vcclient.is_playing():
-    #     await next(ctx)
-    # print(vcclient.is_playing())
 
 
 @bot.command()
