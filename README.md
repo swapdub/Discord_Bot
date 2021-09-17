@@ -19,8 +19,8 @@ To use this code for your own bot follow the steps below if you have Python inst
     Windows command:                        
 
         python main.py
-        
-    Linux command:
+   
+   Linux command:
 
         python3 main.py
 
