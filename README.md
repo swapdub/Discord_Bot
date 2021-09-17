@@ -7,8 +7,11 @@ To use this code for your own bot follow the steps below if you have Python inst
 - Download this repository. 
 - Extract the contents.
 - Install dependencies from <strong> requirements.txt </strong>
+<<<<<<< HEAD
 <br>
     Windows
+=======
+>>>>>>> 8a55af132387180da3325320cfcfdcd4ecb26973
 
         pip install -r requirements.txt
     Linux
@@ -23,8 +26,8 @@ To use this code for your own bot follow the steps below if you have Python inst
     Windows command:                        
 
         python main.py
-        
-    Linux command:
+   
+   Linux command:
 
         python3 main.py
 
