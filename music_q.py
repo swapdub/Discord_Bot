@@ -23,7 +23,7 @@ class Q:
 
     ydl_opts = {
         "format": "bestaudio/best",
-        "postprocessor_args": ["-ar", "24000"],
+        "postprocessor_args": ["-ar", "48000"],
         "keepvideo": True,
         "default_search": "auto",
     }
