@@ -17,6 +17,8 @@ import os
 #    |
 #    -- Each Song entry 
 
+INITIAL_INDEX_VALUE = 0
+
 class Q:
 
     ydl_opts = {
@@ -35,7 +37,7 @@ class Q:
         return
 
     def add_entry(self, ctx, search_term):
-        # entry = dict()
+
         html_content = requests.get(
             "https://www.youtube.com/results?search_query=" + search_term
         )
@@ -47,7 +49,7 @@ class Q:
             self.song_info = ydl.extract_info(
                 "https://www.youtube.com/watch?v=" + self.yt_code[0], download=False
             )
-        # get_yt_code(search_term)
+            
 
         self.entry = {
             "url": self.song_info["url"],
@@ -59,7 +61,7 @@ class Q:
         }
 
         if ctx.guild not in self.guild:
-            self.index[ctx.guild] = 0
+            self.index[ctx.guild] = INITIAL_INDEX_VALUE
             self.guild[ctx.guild] = deque()
             
         self.guild[ctx.guild].append(self.entry)
@@ -69,11 +71,14 @@ class Q:
         return self.entry
 
     def delete_entry(self, ctx, num):
+        if num < self.index[ctx.guild]:
+            self.index[ctx.guild] -= 1
+            
         de = self.guild[ctx.guild]
         del de[num]
 
     def next_track(self, ctx):
-        if self.index[ctx.guild] <= len(self.guild[ctx.guild]):
+        if self.index[ctx.guild] < len(self.guild[ctx.guild]) - 1:
             self.index[ctx.guild] += 1
 
         return self.index[ctx.guild]
@@ -87,10 +92,10 @@ class Q:
     def clear_que(self, ctx, save):
         if save.lower == 'y' or save.lower == 'yes':
             print(save)
-            self.save_data(ctx)
+            save_data(ctx)
         print(save)
         self.guild[ctx.guild].clear()
-        self.index[ctx.guild] = 0
+        self.index[ctx.guild] = INITIAL_INDEX_VALUE
 
     def url(self):
         return
@@ -117,7 +122,7 @@ class Q:
         # json file with the following formatting 
         if not os.path.isfile("discord_playlist.json"):
             f = open("myfile.txt", "x")
-            f.write("[ \n\n] ")
+            f.write("[\n\n] ")
             f.close()
 
         with open("discord_playlist.json", "a") as file:
