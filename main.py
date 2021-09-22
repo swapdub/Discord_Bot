@@ -44,19 +44,19 @@ def play_song_function(ctx, discord):
     print(f'First it is : {que.index[ctx.guild]}')
     vcclient = ctx.voice_client
 
-    try:
-        if not vcclient.is_playing():
-            # song = que.guild[ctx.guild][que.index[ctx.guild]]
-            # que.next_track(ctx)
-            song = que.guild[ctx.guild][que.next_track(ctx)]
-            vcclient.play(discord.FFmpegPCMAudio(song["url"], **ffmpeg_options), after = lambda func: play_song_function(ctx, discord))
-            vcclient.source = discord.PCMVolumeTransformer(vcclient.source)
-            vcclient.source.volume = 1
-            print(f'middle it is : {que.index[ctx.guild]}')
-            # print(f'Song URL : {song["url"]}')
+    # try:
+    if not vcclient.is_playing() and que.index[ctx.guild] != len(que.guild[ctx.guild]) - 1:
+        # song = que.guild[ctx.guild][que.index[ctx.guild]]
+        # que.next_track(ctx)
+        song = que.guild[ctx.guild][que.next_track(ctx)]
+        vcclient.play(discord.FFmpegPCMAudio(song["url"], **ffmpeg_options), after = lambda func: play_song_function(ctx, discord))
+        vcclient.source = discord.PCMVolumeTransformer(vcclient.source)
+        vcclient.source.volume = 1
+        print(f'middle it is : {que.index[ctx.guild]}')
+        # print(f'Song URL : {song["url"]}')
 
-    except e as Exception:
-        print(e)
+    # except e as Exception:
+    #     print(e)
 
 
 @bot.event

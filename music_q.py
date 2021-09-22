@@ -17,7 +17,7 @@ import os
 #    |
 #    -- Each Song entry 
 
-INITIAL_INDEX_VALUE = 0
+INITIAL_INDEX_VALUE = -1
 
 class Q:
 
