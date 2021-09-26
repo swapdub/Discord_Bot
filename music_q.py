@@ -54,7 +54,7 @@ class Q:
 
         self.entry = {
             "url": self.song_info["url"],
-            # "url": "https://www.youtube.com/watch?v=" + self.yt_code[0],
+            "YT-video": "https://www.youtube.com/watch?v=" + self.yt_code[0],
             "name": self.song_info["title"],
             "user": str(ctx.author),
             "channel": str(ctx.author.voice.channel),
