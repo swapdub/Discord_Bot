@@ -17,7 +17,7 @@ intents = discord.Intents().all()
 
 
 # client = discord.Client()
-bot = commands.Bot(command_prefix='`', intents = intents)
+bot = commands.Bot(command_prefix='-', intents = intents)
 
 que = Q()
 
