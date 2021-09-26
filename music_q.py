@@ -53,8 +53,8 @@ class Q:
             
 
         self.entry = {
-            # "url": self.song_info["url"],
-            "url": "https://www.youtube.com/watch?v=" + self.yt_code[0],
+            "url": self.song_info["url"],
+            # "url": "https://www.youtube.com/watch?v=" + self.yt_code[0],
             "name": self.song_info["title"],
             "user": str(ctx.author),
             "channel": str(ctx.author.voice.channel),
@@ -127,7 +127,7 @@ class Q:
         FILENAME = "discord_playlist.json"
         KEY = str(ctx.guild)
         NEW_DATA = { KEY : self.guild[ctx.guild]}
-        
+
         try:
             file = open(FILENAME, 'x')
             file.close()
