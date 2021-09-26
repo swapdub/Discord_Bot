@@ -17,7 +17,7 @@ intents = discord.Intents().all()
 
 
 # client = discord.Client()
-bot = commands.Bot(command_prefix='-', intents = intents)
+bot = commands.Bot(command_prefix='`', intents = intents)
 
 que = Q()
 
@@ -150,6 +150,15 @@ async def leave(ctx, arg = "y"):
     except:
         return
 
+@bot.command(aliases=['s'])
+async def save(ctx):
+    que.save_data(ctx)
+
+@bot.command()
+async def link(ctx):
+    await ctx.send(f"{ctx.guild[ctx.index]['url']}")
+    # que.save_data(ctx)
+
 
 @bot.command(aliases=['t'])
 async def test(ctx, *, arg):
@@ -265,8 +274,8 @@ async def rm(ctx, num: int):
         return
 
 @bot.command(aliases=[])
-async def clear(ctx):
-    que.clear_que(ctx)
+async def clear(ctx, arg = 'y'):
+    que.clear_que(ctx, arg)
 
 @bot.command(aliases=['m'])
 async def vcmute(ctx):
