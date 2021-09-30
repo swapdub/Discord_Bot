@@ -53,13 +53,13 @@ class Q:
             
 
         self.entry = {
-            "url": self.song_info["url"],
-            "YT-video": "https://www.youtube.com/watch?v=" + self.yt_code[0],
-            "name": self.song_info["title"],
-            "user": str(ctx.author),
-            "channel": str(ctx.author.voice.channel),
             "guild": str(ctx.guild),
-            "time": str(datetime.datetime.now())
+            "channel": str(ctx.author.voice.channel),
+            "user": str(ctx.author),
+            "time": str(datetime.datetime.now()),
+            "name": self.song_info["title"],
+            "YT-video": "https://www.youtube.com/watch?v=" + self.yt_code[0],
+            "url": self.song_info["url"]
         }
 
         if ctx.guild not in self.guild:
@@ -92,10 +92,10 @@ class Q:
     def clear_que(self, ctx, save):
         if save.lower == 'y' or save.lower == 'yes':
             print(save)
-            try:
-                self.save_data(ctx)
-            except:
-                pass
+            self.save_data(ctx)
+            # try:
+            # except:
+            #     pass
         print(save)
         self.guild[ctx.guild].clear()
         self.index[ctx.guild] = INITIAL_INDEX_VALUE
@@ -127,6 +127,7 @@ class Q:
         FILENAME = "discord_playlist.json"
         KEY = str(ctx.guild)
         NEW_DATA = { KEY : self.guild[ctx.guild]}
+        # NEW_DATA = self.guild[ctx.guild]
 
         try:
             file = open(FILENAME, 'x')

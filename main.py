@@ -156,7 +156,7 @@ async def save(ctx):
 
 @bot.command()
 async def link(ctx):
-    await ctx.send(f"{ctx.guild[ctx.index]['url']}")
+    await ctx.send(f'Youtube link : {ctx.guild[ctx.index]["YT-video"]}')
     # que.save_data(ctx)
 
 
@@ -194,9 +194,9 @@ async def play(ctx, *, arg):
     #     vcclient.source.volume = 1
         
         #using add entry because we want entry song only, no need for index
-        await ctx.send(f"```Now Playing: {song['name']} [{song['user']}] ```")
+        await ctx.send(f"```Now Playing: {song['name']} [{song['user'][0:-5]}] ```")
     else:
-        await ctx.send(f"```Added to Q: {song['name']} [{song['user']}] ```")
+        await ctx.send(f"```Added to Q: {song['name']} [{song['user'][0:-5]}] ```")
 
 
 @bot.command()
@@ -253,8 +253,8 @@ async def queue(ctx):
     await ctx.send(f"```Current queue:\n{que.my_que(ctx)}```")
 
 
-@bot.command(aliases=['r'])
-async def rm(ctx, num: int):
+@bot.command(aliases=['r', 'rm'])
+async def remove(ctx, num: int):
     try:
         que.delete_entry(ctx, num - 1)
 
