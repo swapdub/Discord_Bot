@@ -74,8 +74,9 @@ class Q:
         if num < self.index[ctx.guild]:
             self.index[ctx.guild] -= 1
             
-        de = self.guild[ctx.guild]
-        del de[num]
+        current_queue = self.guild[ctx.guild]
+        del current_queue[num]
+        return
 
     def next_track(self, ctx):
         if self.index[ctx.guild] < len(self.guild[ctx.guild]) - 1:
@@ -90,13 +91,10 @@ class Q:
         return self.index[ctx.guild]
 
     def clear_que(self, ctx, save):
-        if save.lower == 'y' or save.lower == 'yes':
+        if save.lower() == 'y' or save.lower() == 'yes':
             print(save)
             self.save_data(ctx)
-            # try:
-            # except:
-            #     pass
-        print(save)
+
         self.guild[ctx.guild].clear()
         self.index[ctx.guild] = INITIAL_INDEX_VALUE
 
@@ -144,12 +142,18 @@ class Q:
             if KEY in old_data:
                 old_data[KEY] += NEW_DATA[KEY]
                 print(f'File not empty1')
+                if 'Session ID' not in old_data[KEY][-1]:
+                    NEW_DATA[KEY][-1]['Session ID'] = 1
+                else:
+                    for elements in NEW_DATA[KEY]: 
+                        elements['Session ID'] = old_data[KEY][-1]['Session ID'] + 1
             else:
                 old_data[KEY] = NEW_DATA[KEY]
                 print(f'File not empty2')
             with open(FILENAME, "w+") as fileW:
                 json.dump(old_data, fileW, indent=2)
 
+        return
 
 if __name__ == "__main__":
     import main
