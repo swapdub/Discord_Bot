@@ -10,8 +10,8 @@ To use this code for your own bot follow the steps below if you have Python inst
 <br>
     Windows
 
-        pip install -r requirements.txt
-    Linux
+        pip install -r requirements.txt     
+   Linux
 
         pip3 install -r requirements.txt
 - Paste the token for your bot in the variable "my_secrets" at the top of main.py file.
