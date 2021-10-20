@@ -88,10 +88,6 @@ class Q:
                 self.index[ctx.guild] -= 1
                 return None
 
-        # if self.loop[ctx.guild] == True and self.index[ctx.guild] >= len(self.guild[ctx.guild]) - 1:
-        #     self.index[ctx.guild] = 0
-        # elif self.index[ctx.guild] < len(self.guild[ctx.guild]) - 1:
-
         return self.index[ctx.guild]
 
     def loop_switch(self, ctx):
@@ -103,10 +99,13 @@ class Q:
         return self.loop[ctx.guild]
 
     def prev_track(self, ctx):
-        if self.index[ctx.guild] > 0:
-            self.index[ctx.guild] -= 1
-        elif self.loop[ctx.guild] == True and self.index[ctx.guild] == len(self.guild[ctx.guild]) - 1:
-            self.index[ctx.guild] = len(self.guild[ctx.guild]) - 1
+        self.index[ctx.guild] -= 1
+        if self.index[ctx.guild] < 0:
+            if self.loop[ctx.guild]:
+                self.index[ctx.guild] = len(self.guild[ctx.guild]) - 1
+            else:
+                self.index[ctx.guild] = 0
+                # return None
 
         return self.index[ctx.guild]
 
