@@ -70,3 +70,8 @@ Windows
         https://visualstudio.microsoft.com/visual-cpp-build-tools/
 
 ---
+
+
+## Upcoming Features
+
+- Re-add a session playlist

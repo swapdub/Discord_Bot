@@ -30,9 +30,9 @@ class Q:
     }
     def __init__(self):
         self.guild = dict()
-        # self.que = deque()
         self.index = dict()
         self.entry = dict()
+        self.loop = dict()
 
     def get_yt_code(self, search_term):
         return
@@ -65,6 +65,7 @@ class Q:
         if ctx.guild not in self.guild:
             self.index[ctx.guild] = INITIAL_INDEX_VALUE
             self.guild[ctx.guild] = list()
+            self.loop[ctx.guild] = False
             
         self.guild[ctx.guild].append(self.entry)
         
@@ -79,14 +80,33 @@ class Q:
         return
 
     def next_track(self, ctx):
-        if self.index[ctx.guild] < len(self.guild[ctx.guild]) - 1:
-            self.index[ctx.guild] += 1
+        self.index[ctx.guild] += 1
+        if self.index[ctx.guild] > len(self.guild[ctx.guild]) - 1:
+            if self.loop[ctx.guild]:
+                self.index[ctx.guild] = 0
+            else:
+                self.index[ctx.guild] -= 1
+                return None
+
+        # if self.loop[ctx.guild] == True and self.index[ctx.guild] >= len(self.guild[ctx.guild]) - 1:
+        #     self.index[ctx.guild] = 0
+        # elif self.index[ctx.guild] < len(self.guild[ctx.guild]) - 1:
 
         return self.index[ctx.guild]
+
+    def loop_switch(self, ctx):
+        if self.loop[ctx.guild] == False:
+            self.loop[ctx.guild] = True
+        elif self.loop[ctx.guild] == True:
+            self.loop[ctx.guild] = False
+        print(f'Currently Looping: {self.loop[ctx.guild]}')
+        return self.loop[ctx.guild]
 
     def prev_track(self, ctx):
         if self.index[ctx.guild] > 0:
             self.index[ctx.guild] -= 1
+        elif self.loop[ctx.guild] == True and self.index[ctx.guild] == len(self.guild[ctx.guild]) - 1:
+            self.index[ctx.guild] = len(self.guild[ctx.guild]) - 1
 
         return self.index[ctx.guild]
 
@@ -104,6 +124,16 @@ class Q:
     def nowplaying(self, ctx, arg="name"):
         index = self.index[ctx.guild]
         return self.guild[ctx.guild][index][arg]
+
+    def jump(self, ctx, arg):
+        arg -= 1
+        if arg <= 0:
+            arg = 0
+        elif arg > len(self.guild[ctx.guild]) - 1:
+            arg = len(self.guild[ctx.guild]) - 1
+        
+        self.index[ctx.guild] = arg
+        return self.index[ctx.guild]
 
     def my_que(self, ctx):
         formattedQ = []

@@ -44,20 +44,12 @@ def play_song_function(ctx, discord):
     print(f'First it is : {que.index[ctx.guild]}')
     vcclient = ctx.voice_client
 
-    # try:
-    if not vcclient.is_playing() and que.index[ctx.guild] != len(que.guild[ctx.guild]) - 1:
-        # song = que.guild[ctx.guild][que.index[ctx.guild]]
-        # que.next_track(ctx)
+    if not vcclient.is_playing():
         song = que.guild[ctx.guild][que.next_track(ctx)]
         vcclient.play(discord.FFmpegPCMAudio(song["url"], **ffmpeg_options), after = lambda func: play_song_function(ctx, discord))
         vcclient.source = discord.PCMVolumeTransformer(vcclient.source)
         vcclient.source.volume = 1
         print(f'middle it is : {que.index[ctx.guild]}')
-        # print(f'Song URL : {song["url"]}')
-
-    # except e as Exception:
-    #     print(e)
-
 
 @bot.event
 async def on_ready():
@@ -142,7 +134,7 @@ async def join(ctx):
         await vc.connect()
 
 
-@bot.command(aliases=['l', 'die'])
+@bot.command(aliases=['dc', 'die', 'disconnect'])
 async def leave(ctx, arg = "y"):
     que.clear_que(ctx,arg)
     try:
@@ -156,13 +148,29 @@ async def save(ctx):
 
 @bot.command()
 async def link(ctx):
-    await ctx.send(f'Youtube link : {ctx.guild[ctx.index]["YT-video"]}')
-    # que.save_data(ctx)
+    await ctx.send(f'Youtube link : {que.nowplaying(ctx, "YT-video")}')
+
+@bot.command(aliases=['l'])
+async def loop(ctx):
+    if que.loop_switch(ctx):
+        await ctx.send(f"```Now looping Queue```")
+    else:
+        await ctx.send(f"```Queue Looping disabled```")
 
 
 @bot.command(aliases=['t'])
 async def test(ctx, *, arg):
     await ctx.send(arg)
+
+@bot.command(aliases=['jm'])
+async def jump(ctx, arg:int):
+    que.jump(ctx, (arg - 1))
+
+    vcclient = ctx.voice_client
+    if vcclient.is_playing():
+        vcclient.stop()
+    play_song_function(ctx, discord)
+    await ctx.send(f"```Now Playing: {que.nowplaying(ctx)} [{que.nowplaying(ctx, 'user')}] ```")
 
 
 @bot.command(aliases=['p'])
@@ -175,33 +183,23 @@ async def play(ctx, *, arg):
     try:
         await vc.connect()
     except AttributeError: # Dont do anything if error
-        pass
+        print("AttributeError")
     except Exception as e:
         print(e)
-        pass
-    
-    play_song_function(ctx, discord)
-    # def after_song_end():
-    #     vcclient = ctx.voice_client
-    #     if not vcclient.is_playing():
-    #         vcclient.play(discord.FFmpegPCMAudio(que.guild[ctx.guild][que.next_track(ctx)]["url"]), after = lambda func: after_song_end())
 
+    play_song_function(ctx, discord)
     
     vcclient = ctx.voice_client
-    if not vcclient.is_playing():
-    #     vcclient.play(discord.FFmpegPCMAudio(song["url"]), after = lambda func: after_song_end())
-    #     vcclient.source = discord.PCMVolumeTransformer(vcclient.source)
-    #     vcclient.source.volume = 1
-        
+    if not vcclient.is_playing():        
         #using add entry because we want entry song only, no need for index
         await ctx.send(f"```Now Playing: {song['name']} [{song['user'][0:-5]}] ```")
     else:
         await ctx.send(f"```Added to Q: {song['name']} [{song['user'][0:-5]}] ```")
 
 
-@bot.command()
+@bot.command(aliases=[])
 async def index(ctx):
-    await ctx.send(f"{que.index[ctx.guild]} ms")
+    await ctx.send(f"currently server index : {que.index[ctx.guild] + 1}")
 
 @bot.command()
 async def ping(ctx):
@@ -216,16 +214,11 @@ async def nowplaying(ctx, *, arg = "name"):
 
 @bot.command(aliases=['n'])
 async def next(ctx):
-    # def after_song_end():
-    #     vcclient = ctx.voice_client
-    #     vcclient.play(discord.FFmpegPCMAudio(que.guild[ctx.guild][que.next_track(ctx)]["url"]), after = lambda x: after_song_end())
-
     vcclient = ctx.voice_client
-
     if vcclient.is_playing():
         vcclient.stop()
-    # vcclient.play(discord.FFmpegPCMAudio(que.guild[ctx.guild][que.next_track(ctx)]["url"]), after = lambda x: after_song_end())
     play_song_function(ctx, discord)
+    
     # Using Now playing because next follows index
     await ctx.send(f"```Now Playing: {que.nowplaying(ctx)} [{que.nowplaying(ctx, 'user')}] ```")
 
