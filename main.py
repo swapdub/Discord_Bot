@@ -197,6 +197,14 @@ async def play(ctx, *, arg):
         await ctx.send(f"```Added to Q: {song['name']} [{song['user'][0:-5]}] ```")
 
 
+@bot.command(aliases=['pn'])
+async def playnext(ctx, *, arg):
+    try:
+        song = que.play_next(ctx, arg)
+        await ctx.send(f"```Added to Q: {song['name']} [{song['user'][0:-5]}] ```")
+    except:
+        await ctx.send(f"```There is no Queue to add to yet```")    
+    
 @bot.command(aliases=[])
 async def index(ctx):
     await ctx.send(f"currently server index : {que.index[ctx.guild] + 1}")

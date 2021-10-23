@@ -35,33 +35,35 @@ class Q:
         self.loop = dict()
 
     def get_yt_code(self, search_term):
-        return
-
-    def add_entry(self, ctx, search_term):
-
         html_content = requests.get(
             "https://www.youtube.com/results?search_query=" + search_term
         )
-        self.yt_code = re.findall(
+        yt_code = re.findall(
             r'"videoId":"(.{11})"', html_content.text
         )  # Find song ID on Youtube
 
         with youtube_dl.YoutubeDL(self.ydl_opts) as ydl:
-            self.song_info = ydl.extract_info(
-                "https://www.youtube.com/watch?v=" + self.yt_code[0], download=False
+            song_info = ydl.extract_info(
+                "https://www.youtube.com/watch?v=" + yt_code[0], download=False
             )
-            
+        return song_info, yt_code
 
+    def build_entry(self, ctx, search_term):
+        song_info, yt_code = self.get_yt_code(search_term)
         self.entry = {
             "guild": str(ctx.guild),
             "channel": str(ctx.author.voice.channel),
             "user": str(ctx.author),
             "time": str(datetime.datetime.now()),
-            "name": self.song_info["title"],
-            "YT-video": "https://www.youtube.com/watch?v=" + self.yt_code[0],
-            "url": self.song_info["url"]
+            "name": song_info["title"],
+            "YT-video": "https://www.youtube.com/watch?v=" + yt_code[0],
+            "url": song_info["url"]
         }
+        return self.entry
 
+    def add_entry(self, ctx, search_term):
+        self.build_entry(ctx, search_term)
+        
         if ctx.guild not in self.guild:
             self.index[ctx.guild] = INITIAL_INDEX_VALUE
             self.guild[ctx.guild] = list()
@@ -72,7 +74,7 @@ class Q:
         return self.entry
 
     def delete_entry(self, ctx, num):
-        if num < self.index[ctx.guild]:
+        if num <= self.index[ctx.guild]:
             self.index[ctx.guild] -= 1
             
         current_queue = self.guild[ctx.guild]
@@ -117,9 +119,6 @@ class Q:
         self.guild[ctx.guild].clear()
         self.index[ctx.guild] = INITIAL_INDEX_VALUE
 
-    def url(self):
-        return
-
     def nowplaying(self, ctx, arg="name"):
         index = self.index[ctx.guild]
         return self.guild[ctx.guild][index][arg]
@@ -133,6 +132,13 @@ class Q:
         
         self.index[ctx.guild] = arg
         return self.index[ctx.guild]
+
+    def play_next(self, ctx, arg):
+        self.build_entry(ctx, arg)
+
+        self.guild[ctx.guild].insert(self.index[ctx.guild]  + 1, self.entry)
+        
+        return self.entry
 
     def my_que(self, ctx):
         formattedQ = []
