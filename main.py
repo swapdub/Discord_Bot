@@ -50,6 +50,7 @@ def play_song_function(ctx, discord):
         vcclient.source = discord.PCMVolumeTransformer(vcclient.source)
         vcclient.source.volume = 1
         print(f'middle it is : {que.index[ctx.guild]}')
+    print(f'last it is : {que.index[ctx.guild]}')
 
 @bot.event
 async def on_ready():
@@ -207,7 +208,7 @@ async def playnext(ctx, *, arg):
     
 @bot.command(aliases=[])
 async def index(ctx):
-    await ctx.send(f"currently server index : {que.index[ctx.guild] + 1}")
+    await ctx.send(f"Current Song Index : {que.index[ctx.guild] + 1}")
 
 @bot.command()
 async def ping(ctx):
