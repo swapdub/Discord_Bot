@@ -35,7 +35,7 @@ I have my code with my bot's Token on repl.it <br>
 
 OR                        
 
-> [Add my bot](https://discord.com/oauth2/authorize?client_id=730602425807011847&permissions=8&scope=) to your server
+> [Add my bot](https://discord.com/oauth2/authorize?client_id=730602425807011847&permissions=8&scope=bot) to your server
 
 This allows you to run the bot on their server without having to download anything on your device. It runs in the browser and can be used and viewed by anyone.
 
