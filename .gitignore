@@ -17,3 +17,4 @@ secret.py
 # Extras
 bot_workspace.*
 test.py
+message.py

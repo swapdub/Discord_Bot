@@ -1,15 +1,15 @@
 # to add bot to your server click here : https://discord.com/oauth2/authorize?client_id=730602425807011847&permissions=8&scope=bot
 import os
 import re
-
-from music_q import Q
-import secret
 import json
 import discord
 from discord.ext import commands
-# from keep_alive import keep_alive
 
-my_secret = secret.discord_token
+from music_q import Q
+from secret import discord_token
+
+
+my_secret = discord_token
 
 
 # Discord added this as an extra permission to allow retrieving members related data

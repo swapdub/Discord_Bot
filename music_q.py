@@ -5,6 +5,9 @@ import datetime
 from collections import deque
 import youtube_dl
 import os
+import scraping
+
+import spotify
 
 # Logic : We have a dict with keys as 'Discord Server(ctx.guild)' name. 
 #         Value is the que which is deque from collections library optimized 
@@ -34,6 +37,19 @@ class Q:
         self.entry = dict()
         self.loop = dict()
 
+    def check_input(self, arg):
+        youtube_check = re.search('youtube.com/|youtu.be/', arg)
+        spotify_check = re.search('spotify.com/', arg)
+        print(arg)
+        # if youtube_check != None:
+        #     return scraping.youtube(arg)
+        if spotify_check != None:
+            song_list = spotify.get_song_list(arg)
+            print(song_list)
+            return song_list
+        else: 
+            return [arg]
+
     def get_yt_code(self, search_term):
         html_content = requests.get(
             "https://www.youtube.com/results?search_query=" + search_term
@@ -61,15 +77,21 @@ class Q:
         }
         return self.entry
 
-    def add_entry(self, ctx, search_term):
-        self.build_entry(ctx, search_term)
-        
+    def add_entry(self, ctx, arg):
         if ctx.guild not in self.guild:
             self.index[ctx.guild] = INITIAL_INDEX_VALUE
             self.guild[ctx.guild] = list()
             self.loop[ctx.guild] = False
+        
+        song_list = self.check_input(arg)
+        for search_term in song_list:
+            try:
+                print(search_term.text)
+            except :
+                print(search_term)
+            self.build_entry(ctx, search_term)        
             
-        self.guild[ctx.guild].append(self.entry)
+            self.guild[ctx.guild].append(self.entry)
         
         return self.entry
 
@@ -160,7 +182,6 @@ class Q:
         FILENAME = "discord_playlist.json"
         KEY = str(ctx.guild)
         NEW_DATA = { KEY : self.guild[ctx.guild]}
-        # NEW_DATA = self.guild[ctx.guild]
 
         try:
             file = open(FILENAME, 'x')
