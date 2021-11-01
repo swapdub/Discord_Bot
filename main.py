@@ -206,9 +206,9 @@ async def playnext(ctx, *, arg):
     except:
         await ctx.send(f"```There is no Queue to add to yet```")    
     
-@bot.command(aliases=[])
+@bot.command(aliases=['i'])
 async def index(ctx):
-    await ctx.send(f"Current Song Index : {que.index[ctx.guild] + 1}")
+    await ctx.send(f"Current Song Index : {que.index[ctx.guild] + 1} | Queue Looping: {que.loop[ctx.guild]}")
 
 @bot.command()
 async def ping(ctx):
