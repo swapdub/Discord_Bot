@@ -4,10 +4,7 @@ import json
 from secret import client_id, client_secret
 from message import data_response
 
-# url = 'https://open.spotify.com/playlist/7Dl3ZKjov0HtLA1K7QkwUY?si=ea8cdd50785b4c9c'
-# url = 'https://open.spotify.com/playlist/33a8Tmb4nA4CRDOnYrjTkr?si=880eaa2d8fb943ce'
 
-url = 'https://open.spotify.com/playlist/37i9dQZF1DX4mWCZw6qYIw?si=98e44e4c24aa4f3f'
 
 def get_access_token():
 
@@ -31,9 +28,9 @@ def get_access_token():
     else:
         return None
 
-FILENAME = "access_token.txt"
 
 def get_song_list(user_url):
+    FILENAME = "access_token.txt"
     
     try:
         # Opens a file for exclusive creation. 
@@ -47,7 +44,7 @@ def get_song_list(user_url):
         access_token = file.read()
         
         if access_token:
-            print (f'Fetching access token from file {access_token}')
+            print (f'Fetching access token from file : {access_token}')
             playlist_id = user_url.strip('https://open.spotify.com/playlist/')
             url = f'https://api.spotify.com/v1/playlists/{playlist_id}'
             headers = {'Authorization': f'Bearer {access_token}', 'Content-Type': 'application/json'}
@@ -69,7 +66,7 @@ def get_song_list(user_url):
                 # file.truncate()
                 print(page.status_code, page.text)
                 print('Writing access token')
-                # get_song_list(user_url)        
+                get_song_list(user_url)        
         else:
             access_token = get_access_token()
             file.seek(0)
@@ -78,6 +75,10 @@ def get_song_list(user_url):
             print('Writing access token')
             get_song_list(user_url)        
 
+if __name__ == '__main__':
+    # url = 'https://open.spotify.com/playlist/7Dl3ZKjov0HtLA1K7QkwUY?si=ea8cdd50785b4c9c'
+    # url = 'https://open.spotify.com/playlist/33a8Tmb4nA4CRDOnYrjTkr?si=880eaa2d8fb943ce'
+    # url = 'https://open.spotify.com/playlist/37i9dQZF1DX4mWCZw6qYIw?si=98e44e4c24aa4f3f'
+    url = 'https://open.spotify.com/playlist/37i9dQZEVXbMDoHDwVN2tF?si=107bd93590e146de'
 
-
-get_song_list(url)
+    get_song_list(url)
