@@ -17,7 +17,7 @@ import spotify
 #            -- A dictionary of guilds/Server as keys-- 
 #            |                                        |
 #       dict 1 (self.guilds)               dict 2 (self.index)
-# A Queue of songs using deque()          Keep track of Q index
+# A Queue of songs using lists()          Keep track of Q index
 #           |
 #    Each Song entry 
 
@@ -36,32 +36,38 @@ class Q:
         self.index = dict()
         self.entry = dict()
         self.loop = dict()
+        self.payload = dict()
 
-    def check_input(self, arg):
-        youtube_check = re.search('youtube.com/|youtu.be/', arg)
-        spotify_check = re.search('spotify.com/', arg)
-        print(arg)
-        # if youtube_check != None:
-        #     return scraping.youtube(arg)
-        if spotify_check != None:
-            song_list = spotify.get_song_list(arg)
+    def check_input(self, url):
+        youtube_check = re.search(r'youtube.com/|youtu.be/', url)
+        spotify_check = re.search('spotify.com/', url)
+        print(url)
+        if youtube_check != None:
+            return scraping.youtube(url)
+        elif spotify_check != None:
+            song_list = spotify.get_song_list(url)
             print(song_list)
             return song_list
-        else: 
-            return [arg]
+        else:
+            return [url]
+        
+    def yt_dl_info(self, yt_code):
+        with youtube_dl.YoutubeDL(self.ydl_opts) as ydl:
+            song_info = ydl.extract_info(
+                "https://www.youtube.com/watch?v=" + yt_code, download=False
+            )
+        return song_info
 
     def get_yt_code(self, search_term):
         html_content = requests.get(
             "https://www.youtube.com/results?search_query=" + search_term
         )
-        yt_code = re.findall(
-            r'"videoId":"(.{11})"', html_content.text
-        )  # Find song ID on Youtube
 
-        with youtube_dl.YoutubeDL(self.ydl_opts) as ydl:
-            song_info = ydl.extract_info(
-                "https://www.youtube.com/watch?v=" + yt_code[0], download=False
-            )
+        # Find song ID on Youtube
+        yt_code = (re.findall(r'"videoId":"(.{11})"', html_content.text))[0]
+
+        song_info = self.yt_dl_info(yt_code)
+
         return song_info, yt_code
 
     def build_entry(self, ctx, search_term):
@@ -77,24 +83,49 @@ class Q:
         }
         return self.entry
 
-    def add_entry(self, ctx, arg):
+    def add_entry(self, ctx, search_term):
+        if ctx.guild not in self.guild:
+            self.index[ctx.guild] = INITIAL_INDEX_VALUE
+            self.guild[ctx.guild] = list()
+            self.loop[ctx.guild] = False
+        print(ctx.guild)    
+        self.build_entry(ctx, search_term)        
+        self.guild[ctx.guild].append(self.entry)
+        self.payload[ctx.guild] = []
+        
+        return self.entry
+
+    def add_playlist(self, ctx, playlist_url, startpoint, endpoint):
+        self.payload[ctx.guild] = []
         if ctx.guild not in self.guild:
             self.index[ctx.guild] = INITIAL_INDEX_VALUE
             self.guild[ctx.guild] = list()
             self.loop[ctx.guild] = False
         
-        song_list = self.check_input(arg)
-        for search_term in song_list:
+        song_list = self.check_input(playlist_url)
+        for yt_code in song_list[startpoint:endpoint]:
             try:
-                print(search_term.text)
-            except :
-                print(search_term)
-            self.build_entry(ctx, search_term)        
+                song_info = self.yt_dl_info(yt_code)
+                self.entry = {
+                    "guild": str(ctx.guild),
+                    "channel": str(ctx.author.voice.channel),
+                    "user": str(ctx.author),
+                    "time": str(datetime.datetime.now()),
+                    "name": song_info["title"],
+                    "YT-video": "https://www.youtube.com/watch?v=" + yt_code,
+                    "url": song_info["url"]
+                }
+                print(song_info['title'])
+                # print(self.entry[ctx.guild])
+                self.guild[ctx.guild].insert(len(self.guild[ctx.guild]), self.entry)
+                # self.payload[ctx.guild].append(self.entry)
+            except Exception as e:
+                print(e)
             
-            self.guild[ctx.guild].append(self.entry)
+        # self.payload[ctx.guild] = []
         
         return self.entry
-
+            
     def delete_entry(self, ctx, num):
         if num <= self.index[ctx.guild]:
             self.index[ctx.guild] -= 1

@@ -7,6 +7,8 @@ from discord.ext import commands
 
 from music_q import Q
 from secret import discord_token
+import scraping
+import spotify
 
 
 my_secret = discord_token
@@ -292,6 +294,45 @@ async def vcunmute(ctx):
     vc = ctx.author.voice.channel
     for member in vc.members:
         await member.edit(mute=False)
+
+@bot.command(aliases=['st'])
+async def spot(ctx, *, arg):
+    response = scraping.spotify(arg)
+    response1 = spotify.get_song_list(arg)
+
+    await ctx.send(response, response1 )
+
+@bot.command(aliases=[])
+async def yt(ctx, *, arg):
+    # response = scraping.youtube(arg)
+    vc = ctx.author.voice.channel
+    song = que.add_entry_playlist(ctx, arg)
+
+    try:
+        await vc.connect()
+    except AttributeError: # Dont do anything if error
+        print("AttributeError")
+    except Exception as e:
+        print(e)
+
+    play_song_function(ctx, discord)
+
+@bot.command(aliases=['pa'])
+async def playall(ctx, arg, startpoint=0, endpoint=3):
+    # response = scraping.youtube(arg)
+    vc = ctx.author.voice.channel
+    song = que.add_playlist(ctx, arg, startpoint, endpoint)
+
+    try:
+        await vc.connect()
+    except AttributeError: # Dont do anything if error
+        print("AttributeError")
+    except Exception as e:
+        print(e)
+
+    play_song_function(ctx, discord)
+
+    # await ctx.send(response)
 
 
 # keep_alive()
