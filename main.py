@@ -1,15 +1,17 @@
 # to add bot to your server click here : https://discord.com/oauth2/authorize?client_id=730602425807011847&permissions=8&scope=bot
 import os
 import re
-
-from music_q import Q
-import secret
 import json
 import discord
 from discord.ext import commands
-# from keep_alive import keep_alive
 
-my_secret = secret.discord_token
+from music_q import Q
+from secret import discord_token
+import scraping
+import spotify
+
+
+my_secret = discord_token
 
 
 # Discord added this as an extra permission to allow retrieving members related data
@@ -206,9 +208,9 @@ async def playnext(ctx, *, arg):
     except:
         await ctx.send(f"```There is no Queue to add to yet```")    
     
-@bot.command(aliases=[])
+@bot.command(aliases=['i'])
 async def index(ctx):
-    await ctx.send(f"Current Song Index : {que.index[ctx.guild] + 1}")
+    await ctx.send(f"Current Song Index : {que.index[ctx.guild] + 1} | Queue Looping: {que.loop[ctx.guild]}")
 
 @bot.command()
 async def ping(ctx):
@@ -292,6 +294,45 @@ async def vcunmute(ctx):
     vc = ctx.author.voice.channel
     for member in vc.members:
         await member.edit(mute=False)
+
+@bot.command(aliases=['st'])
+async def spot(ctx, *, arg):
+    response = scraping.spotify(arg)
+    response1 = spotify.get_song_list(arg)
+
+    await ctx.send(response, response1 )
+
+@bot.command(aliases=[])
+async def yt(ctx, *, arg):
+    # response = scraping.youtube(arg)
+    vc = ctx.author.voice.channel
+    song = que.add_entry_playlist(ctx, arg)
+
+    try:
+        await vc.connect()
+    except AttributeError: # Dont do anything if error
+        print("AttributeError")
+    except Exception as e:
+        print(e)
+
+    play_song_function(ctx, discord)
+
+@bot.command(aliases=['pa'])
+async def playall(ctx, arg, startpoint=0, endpoint=3):
+    # response = scraping.youtube(arg)
+    vc = ctx.author.voice.channel
+    song = que.add_playlist(ctx, arg, startpoint, endpoint)
+
+    try:
+        await vc.connect()
+    except AttributeError: # Dont do anything if error
+        print("AttributeError")
+    except Exception as e:
+        print(e)
+
+    play_song_function(ctx, discord)
+
+    # await ctx.send(response)
 
 
 # keep_alive()
