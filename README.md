@@ -75,3 +75,77 @@ Windows
 ## Upcoming Features
 
 - Re-add a session playlist
+
+
+# Command List
+## Bot controls
+- clear
+    - clear current queue      
+- help
+    - Shows this message
+- index
+    - Aliases: ```-i```
+    - Displays Index of the song currently playing. (Useful for troubleshooting some errors)
+- join
+    - Aliases: ```-j ```
+    - Joins the Voice Channel the user is connected to. Does not work if you are not in a Voice Channel already
+- leave
+    - Aliases: ```-dc, -die```
+    - Disconnect from Voice Channel
+
+## Music Player Control Commands
+- play
+    - Aliases: ```-p (song name or link)```
+    - Play followed by the name of your Search Query / Song
+- playnext
+    - Aliases: ```-pn (song name or link)```
+    - Add the given song to Queue right after the currently playing song
+- next
+    - Aliases: ```-n```
+    - Next song
+- prev
+    - Previous Song
+- jump
+    - Aliases: ```-jm (enter number here)```
+    - Jump to the specified index number given
+- loop
+    - Aliases: ```-l```
+    - Loop queue
+- remove
+    - Aliases: ```-rm (song index number)```
+    - Remove the song with the specified index number (only numbers allowed)
+
+## Music Info Commands
+- link
+    - Share Youtube link of the currently playing song
+- nowplaying
+    - Aliases: ```-np```
+    - View the song title currently playing
+- ping
+    - Latency of the bot to the Voice Channel Server
+- queue
+    - Aliases: ```-q```
+    - View the current queue
+- save
+    - Export and save the current queue to the server database
+- test 
+    - -test *your_message_here*
+    - Responds back with your input message
+    
+## Commands targeted for Among Us Lobbies 
+- vcmute
+    - Aliases: ```-vm```
+    - Server mute all the people in the current Voice Channel
+- vcunmute
+    - Aliases: ```-um```
+    - Server unmute all the people in the current Voice Channel
+
+
+# Bot Command Structure
+- ask play songname
+- find song
+- save video_id to q
+- change q from txt to just a list in code
+- get q[0] for first song
+- play song from q
+- End of session, export q metadata to a databse: requestorName, songName, etc
