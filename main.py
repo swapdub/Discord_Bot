@@ -24,6 +24,7 @@ bot = commands.Bot(command_prefix='-', intents = intents)
 
 que = Q()
 
+# Template function kept from a tutorial
 def get_quote():
     response = requests.get("https://zenquotes.io/api/random")
     json_data = json.loads(response.text)
