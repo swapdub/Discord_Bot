@@ -36,20 +36,50 @@ class Q:
         self.index = dict()
         self.entry = dict()
         self.loop = dict()
-        self.payload = dict()
 
-    def check_input(self, url):
-        youtube_check = re.search(r'youtube.com/|youtu.be/', url)
-        spotify_check = re.search('spotify.com/', url)
-        print(url)
+
+    def check_input(self, ctx, playlist_url, startpoint, endpoint, add_position):
+        print(playlist_url)
+        youtube_check = re.search(r'youtube.com/|youtu.be/', playlist_url)
+        spotify_check = re.search('spotify.com/', playlist_url)
+
         if youtube_check != None:
-            return scraping.youtube(url)
+            song_list = scraping.youtube(playlist_url)
+            for yt_code in song_list[startpoint:endpoint]:
+                try:
+                    song_info = self.yt_dl_info(yt_code)
+                    self.entry = {
+                        "guild": str(ctx.guild),
+                        "channel": str(ctx.author.voice.channel),
+                        "user": str(ctx.author),
+                        "time": str(datetime.datetime.now()),
+                        "name": song_info["title"],
+                        "YT-video": "https://www.youtube.com/watch?v=" + yt_code,
+                        "url": song_info["url"]
+                    }
+                    print(song_info['title'])
+                    self.guild[ctx.guild].insert(add_position, self.entry)
+                except Exception as e:
+                    print(e)
+
+            return len(song_list)
+        
         elif spotify_check != None:
-            song_list = spotify.get_song_list(url)
+            song_list = scraping.spotify(playlist_url)
             print(song_list)
-            return song_list
+            for song in song_list[startpoint:endpoint]:
+                try:
+                    self.build_entry(ctx, song)
+                    # self.guild[ctx.guild].insert(len(self.guild[ctx.guild]), self.entry)
+                    self.guild[ctx.guild].insert(add_position, self.entry)  
+                except Exception as e:
+                    print(e)
+            return  len(song_list)
+
         else:
-            return [url]
+            self.build_entry(ctx, playlist_url)
+            self.guild[ctx.guild].insert(add_position, self.entry) 
+            return 1
         
     def yt_dl_info(self, yt_code):
         with youtube_dl.YoutubeDL(self.ydl_opts) as ydl:
@@ -83,49 +113,17 @@ class Q:
         }
         return self.entry
 
-    def add_entry(self, ctx, search_term):
-        if ctx.guild not in self.guild:
-            self.index[ctx.guild] = INITIAL_INDEX_VALUE
-            self.guild[ctx.guild] = list()
-            self.loop[ctx.guild] = False
-        print(ctx.guild)    
-        self.build_entry(ctx, search_term)        
-        self.guild[ctx.guild].append(self.entry)
-        self.payload[ctx.guild] = []
-        
-        return self.entry
 
-    def add_playlist(self, ctx, playlist_url, startpoint, endpoint):
-        self.payload[ctx.guild] = []
+    def add_entry(self, ctx, playlist_url, startpoint, endpoint, position):
         if ctx.guild not in self.guild:
             self.index[ctx.guild] = INITIAL_INDEX_VALUE
             self.guild[ctx.guild] = list()
             self.loop[ctx.guild] = False
+        print(ctx.guild)
+        num_of_songs = self.check_input(ctx, playlist_url, startpoint, endpoint, position)
+        return self.entry, num_of_songs
+
         
-        song_list = self.check_input(playlist_url)
-        for yt_code in song_list[startpoint:endpoint]:
-            try:
-                song_info = self.yt_dl_info(yt_code)
-                self.entry = {
-                    "guild": str(ctx.guild),
-                    "channel": str(ctx.author.voice.channel),
-                    "user": str(ctx.author),
-                    "time": str(datetime.datetime.now()),
-                    "name": song_info["title"],
-                    "YT-video": "https://www.youtube.com/watch?v=" + yt_code,
-                    "url": song_info["url"]
-                }
-                print(song_info['title'])
-                # print(self.entry[ctx.guild])
-                self.guild[ctx.guild].insert(len(self.guild[ctx.guild]), self.entry)
-                # self.payload[ctx.guild].append(self.entry)
-            except Exception as e:
-                print(e)
-            
-        # self.payload[ctx.guild] = []
-        
-        return self.entry
-            
     def delete_entry(self, ctx, num):
         if num <= self.index[ctx.guild]:
             self.index[ctx.guild] -= 1
@@ -134,6 +132,7 @@ class Q:
         del current_queue[num]
         return
 
+
     def next_track(self, ctx):
         self.index[ctx.guild] += 1
         if self.index[ctx.guild] > len(self.guild[ctx.guild]) - 1:
@@ -141,9 +140,9 @@ class Q:
                 self.index[ctx.guild] = 0
             else:
                 self.index[ctx.guild] -= 1
-                return None
-
+                return None # Need this none so that Q doesnt keep looping
         return self.index[ctx.guild]
+
 
     def loop_switch(self, ctx):
         if self.loop[ctx.guild] == False:
@@ -153,6 +152,7 @@ class Q:
         print(f'Currently Looping: {self.loop[ctx.guild]}')
         return self.loop[ctx.guild]
 
+
     def prev_track(self, ctx):
         self.index[ctx.guild] -= 1
         if self.index[ctx.guild] < 0:
@@ -160,9 +160,8 @@ class Q:
                 self.index[ctx.guild] = len(self.guild[ctx.guild]) - 1
             else:
                 self.index[ctx.guild] = 0
-                # return None
-
         return self.index[ctx.guild]
+
 
     def clear_que(self, ctx, save):
         if save.lower() == 'y' or save.lower() == 'yes':
@@ -172,9 +171,11 @@ class Q:
         self.guild[ctx.guild].clear()
         self.index[ctx.guild] = INITIAL_INDEX_VALUE
 
+
     def nowplaying(self, ctx, arg="name"):
         index = self.index[ctx.guild]
         return self.guild[ctx.guild][index][arg]
+
 
     def jump(self, ctx, arg):
         arg -= 1
@@ -186,25 +187,22 @@ class Q:
         self.index[ctx.guild] = arg
         return self.index[ctx.guild]
 
-    def play_next(self, ctx, arg):
-        self.build_entry(ctx, arg)
 
-        self.guild[ctx.guild].insert(self.index[ctx.guild]  + 1, self.entry)
-        
-        return self.entry
-
-    def my_que(self, ctx):
+    def my_que(self, ctx, page_num):
         formattedQ = []
-        count = 1
-
-        for entry in self.guild[ctx.guild]:
-            string = f"{count}. {entry['name']} added by {entry['user']}"
+        index_count = 1
+        q_view_size = 8
+                    #   False             True                    Condition
+        endpoint    = (q_view_size * page_num, len(self.guild[ctx.guild]))[q_view_size * page_num >= len(self.guild[ctx.guild])]
+        startpoint  = q_view_size * (page_num - 1)
+        for entry in self.guild[ctx.guild][startpoint : endpoint]:
+            string = f"{index_count + (q_view_size * (page_num - 1))}. {entry['name']} added by {entry['user'][:-5]}"
             formattedQ.append(string)
-            count += 1
-
+            index_count += 1
         formattedQ = "\n".join(formattedQ)
 
         return formattedQ
+
 
     def save_data(self, ctx):
         # A function to save user playlist statistics and 
@@ -239,8 +237,8 @@ class Q:
                 print(f'File not empty2')
             with open(FILENAME, "w+") as fileW:
                 json.dump(old_data, fileW, indent=2)
-
         return
+
 
 if __name__ == "__main__":
     import main

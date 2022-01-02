@@ -56,16 +56,14 @@ def get_song_list(user_url):
                 song_list = []
                 for item in data_response['tracks']['items']:
                     song_list.append(item['track']['name'])
-                    print(item['track']['name'])
+                    # print(item['track']['name'])
+                print(song_list)
                 return song_list
 
             else:
-                # access_token = get_access_token()
-                # file.seek(0)
-                # file.write(access_token)
-                # file.truncate()
-                print(page.status_code, page.text)
-                print('Writing access token')
+                with open("access_token.txt", 'w'):
+                    print(page.status_code, page.text)
+                    print('Writing access token')
                 get_song_list(user_url)        
         else:
             access_token = get_access_token()
@@ -79,6 +77,7 @@ if __name__ == '__main__':
     # url = 'https://open.spotify.com/playlist/7Dl3ZKjov0HtLA1K7QkwUY?si=ea8cdd50785b4c9c'
     # url = 'https://open.spotify.com/playlist/33a8Tmb4nA4CRDOnYrjTkr?si=880eaa2d8fb943ce'
     # url = 'https://open.spotify.com/playlist/37i9dQZF1DX4mWCZw6qYIw?si=98e44e4c24aa4f3f'
-    url = 'https://open.spotify.com/playlist/37i9dQZEVXbMDoHDwVN2tF?si=107bd93590e146de'
+    # url = 'https://open.spotify.com/playlist/37i9dQZEVXbMDoHDwVN2tF?si=107bd93590e146de'
+    url = 'https://open.spotify.com/playlist/7Dl3ZKjov0HtLA1K7QkwUY?si=ea8cdd50785b4c9c'
 
     get_song_list(url)
