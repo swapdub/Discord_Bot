@@ -1,15 +1,18 @@
 # to add bot to your server click here : https://discord.com/oauth2/authorize?client_id=730602425807011847&permissions=8&scope=bot
 import os
 import re
-
-from music_q import Q
-import secret
 import json
 import discord
 from discord.ext import commands
-# from keep_alive import keep_alive
 
-my_secret = secret.discord_token
+# user Libraries
+from music_q import Q
+from secret import discord_token
+import scraping
+import spotify
+
+
+my_secret = discord_token
 
 
 # Discord added this as an extra permission to allow retrieving members related data
@@ -21,6 +24,7 @@ bot = commands.Bot(command_prefix='-', intents = intents)
 
 que = Q()
 
+# Template function kept from a tutorial
 def get_quote():
     response = requests.get("https://zenquotes.io/api/random")
     json_data = json.loads(response.text)
@@ -43,7 +47,7 @@ def play_song_function(ctx, discord):
 
     print(f'First it is : {que.index[ctx.guild]}')
     vcclient = ctx.voice_client
-
+    
     if not vcclient.is_playing():
         song = que.guild[ctx.guild][que.next_track(ctx)]
         vcclient.play(discord.FFmpegPCMAudio(song["url"], **ffmpeg_options), after = lambda func: play_song_function(ctx, discord))
@@ -55,65 +59,6 @@ def play_song_function(ctx, discord):
 @bot.event
 async def on_ready():
     print(" We have logged in as {0.user}".format(bot))
-
-
-@bot.event
-async def on_message(arg):
-    arg.content = arg.content.lower()
-    if arg.author == bot.user:
-      return
-    
-    """KHAN related messages"""
-
-    global count
-    if arg.content.startswith("-a") and arg.author:
-      count += 1
-      await arg.delete()
-      await arg.channel.send("Khan has used 'Anyways' " + str(count) + " times in this conversation.")
-    
-    if arg.content.startswith("-c") and arg.author:
-      count -= 1
-      await arg.delete()
-      await arg.channel.send("Khan has used 'Anyways' " + str(count) + " times in this conversation.")
-
-    if arg.content == ("reset") and arg.author:
-      count = 0
-      await arg.delete()
-      await arg.channel.send("'Anyways' counter has reset!")
-    
-    if arg.content.startswith("khan says"):
-        await arg.channel.send("Anyways")
-
-    if arg.content.find("line") != -1 and arg.content.find("tamatar") != -1:
-        await arg.channel.send("https://tenor.com/view/paisa-hi-hoga-gif-20395381")
-
-
-    """OTHER messages"""
-
-    if arg.content.startswith("akku bole toh"):
-        await arg.channel.send("Samurai Jack ka enemy")
-
-    if arg.content.startswith("good one"):
-        await arg.channel.send("Thanks lol! ;)")
-    
-
-    """ 
-    THIS LINE IS IMPORTANT WHEN USING BOT FOR MESSAGES !!!
-    (its a quirk of using the extension's bot library)
-    """
-    await bot.process_commands(arg) 
-
-# @client.event
-# async def on_message(message):
-#     if message.content.startswith("Khan says"):
-#         # quote = get_quote()
-#         await message.channel.send("Anyways")
-
-
-# @bot.event
-# async def on_message(arg):
-
-
 
 
 @bot.command(aliases=['j'])
@@ -176,11 +121,7 @@ async def jump(ctx, arg:int):
 
 @bot.command(aliases=['p'])
 async def play(ctx, *, arg):
-
     vc = ctx.author.voice.channel
-    song = que.add_entry(ctx, arg)
-    
-
     try:
         await vc.connect()
     except AttributeError: # Dont do anything if error
@@ -188,8 +129,16 @@ async def play(ctx, *, arg):
     except Exception as e:
         print(e)
 
+    STARTPOINT = 0
+    ENDPOINT = 1
+    try:
+        SONG_ADD_POSTION = len(que.guild[ctx.guild])
+    except:
+        SONG_ADD_POSTION = 0
+
+    song, num_of_songs = que.add_entry(ctx, arg, STARTPOINT, ENDPOINT, SONG_ADD_POSTION)
+        
     play_song_function(ctx, discord)
-    
     vcclient = ctx.voice_client
     if not vcclient.is_playing():        
         #using add entry because we want entry song only, no need for index
@@ -199,16 +148,17 @@ async def play(ctx, *, arg):
 
 
 @bot.command(aliases=['pn'])
-async def playnext(ctx, *, arg):
+async def playnext(ctx, *, arg, startpoint = 0, endpoint = -1):
     try:
-        song = que.play_next(ctx, arg)
+        SONG_ADD_POSTION = que.index[ctx.guild]  + 1
+        song, num_of_songs = que.add_entry(ctx, arg, startpoint, endpoint, SONG_ADD_POSTION)
         await ctx.send(f"```Added to Q: {song['name']} [{song['user'][0:-5]}] ```")
     except:
         await ctx.send(f"```There is no Queue to add to yet```")    
     
-@bot.command(aliases=[])
+@bot.command(aliases=['i'])
 async def index(ctx):
-    await ctx.send(f"Current Song Index : {que.index[ctx.guild] + 1}")
+    await ctx.send(f"Current Song Index : {que.index[ctx.guild] + 1} | Queue Looping: {que.loop[ctx.guild]}")
 
 @bot.command()
 async def ping(ctx):
@@ -234,11 +184,6 @@ async def next(ctx):
 
 @bot.command(aliases=[])
 async def prev(ctx):
-    # index = que.index[ctx.guild]
-    # # index -= 1
-    # if index > 0: 
-    #     index -= 1
-    # que.index[ctx.guild] = index
     my_que = que.guild[ctx.guild][que.prev_track(ctx)]["url"]
 
     vcclient = ctx.voice_client
@@ -251,19 +196,21 @@ async def prev(ctx):
     await ctx.send(f"```Now Playing: {que.nowplaying(ctx)} [{que.nowplaying(ctx, 'user')}] ```")
 
 @bot.command(aliases=['q'])
-async def queue(ctx):
-    await ctx.send(f"```Current queue:\n{que.my_que(ctx)}```")
+async def queue(ctx, page = 1):
+    await ctx.send(f"```Current queue:\n{que.my_que(ctx, page)}```")
 
 
-@bot.command(aliases=['r', 'rm'])
+@bot.command(aliases=['r', 'rm', 'del'])
 async def remove(ctx, num: int):
     try:
-        que.delete_entry(ctx, num - 1)
+        zero_adjusted_num = num - 1
+        await ctx.send(f"```Removed:\n{que.guild[ctx.guild][zero_adjusted_num]['name']}```")
+        que.delete_entry(ctx, zero_adjusted_num)
 
-        #In case we remove the now playing song
-        #Using the next function will should get us to index 0
-        if num == 1:
-            que.index[ctx.guild] = -1
+        # In case we remove the now playing song
+        # Using the next function will should get us to index 0
+        if num == que.index[ctx.guild]:
+            que.index[ctx.guild] = que.index[ctx.guild] - 1
 
     except ValueError:
         await ctx.send("Whoops, numbers only please!!")
@@ -273,7 +220,7 @@ async def remove(ctx, num: int):
     except Exception as e:
         print(e)
         await ctx.send("Whoops, something went wrong!!")
-        return
+    return
 
 @bot.command(aliases=[])
 async def clear(ctx, arg = 'y'):
@@ -293,7 +240,48 @@ async def vcunmute(ctx):
     for member in vc.members:
         await member.edit(mute=False)
 
+@bot.command(aliases=['pa', 'pall'])
+async def playall(ctx, arg, startpoint = 0, endpoint = -1):
+    vc = ctx.author.voice.channel
+    try:
+        await vc.connect()
+    except AttributeError: # Dont do anything if error
+        print("AttributeError")
+    except Exception as e:
+        print(e)
 
-# keep_alive()
+    try:
+        SONG_ADD_POSTION = len(que.guild[ctx.guild])
+    except:
+        SONG_ADD_POSTION = 0
+
+    song, num_of_songs = que.add_entry(ctx, arg, startpoint, endpoint, SONG_ADD_POSTION)
+        
+    play_song_function(ctx, discord)
+    vcclient = ctx.voice_client
+    if not vcclient.is_playing():        
+        # using add entry because we want entry song only, no need for index
+        await ctx.send(f"```Now Playing: {num_of_songs} songs added by [{song['user'][0:-5]}] ```")
+    else:
+        await ctx.send(f"```Added to Q: {num_of_songs} songs added by [{song['user'][0:-5]}] ```")
+
+@bot.command(aliases=['pna', 'pnal', 'pnall'])
+async def playnextall(ctx, arg, startpoint = 0, endpoint = -1):
+    vc = ctx.author.voice.channel
+    try:
+        await vc.connect()
+    except AttributeError: # Dont do anything if error
+        print("AttributeError")
+    except Exception as e:
+        print(e)
+    try:
+        SONG_ADD_POSTION = que.index[ctx.guild] + 1
+        song, num_of_songs = que.add_entry(ctx, arg, startpoint, endpoint, SONG_ADD_POSTION)
+        await ctx.send(f"```Added to Q: {num_of_songs} songs added by [{song['user'][0:-5]}] ```")
+    except:
+        await ctx.send(f"```There is no Queue to add to yet```")    
+
+
+
+
 bot.run(my_secret)
-# client.run(my_secret)

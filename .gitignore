@@ -13,7 +13,11 @@ __pycache__
 static
 discord_playlist.*
 secret.py
+spoti.py
+youtube.py
 
 # Extras
 bot_workspace.*
 test.py
+message.py
+access_token.*
