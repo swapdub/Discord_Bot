@@ -94,7 +94,7 @@ async def save(ctx):
 
 @bot.command()
 async def link(ctx):
-    await ctx.send(f'>>> Youtube link : {que.nowplaying(ctx, "YT-video")}')
+    await ctx.send(f'Youtube link : {que.nowplaying(ctx, "YT-video")}')
 
 @bot.command(aliases=['l'])
 async def loop(ctx):

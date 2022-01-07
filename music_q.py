@@ -107,7 +107,7 @@ class Q:
             "user": str(ctx.author),
             "time": str(datetime.datetime.now()),
             "name": song_info["title"],
-            "YT-video": "https://www.youtube.com/watch?v=" + yt_code[0],
+            "YT-video": "https://www.youtube.com/watch?v=" + yt_code,
             "url": song_info["url"]
         }
         return self.entry
