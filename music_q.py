@@ -27,8 +27,8 @@ class Q:
 
     ydl_opts = {
         "format": "bestaudio/best",
-        "postprocessor_args": ["-ar", "48000"], # Audio Freq:48 KHz
-        "keepvideo": True,
+        "postprocessor_args": ["-ar", "192000"], # Audio Freq:192 KHz
+        "keepvideo": False,
         "default_search": "auto",
     }
     def __init__(self):
@@ -38,7 +38,7 @@ class Q:
         self.loop = dict()
 
 
-    def check_input(self, ctx, playlist_url, startpoint, endpoint, add_position):
+    async def check_input(self, ctx, playlist_url, startpoint, endpoint, add_position):
         print(playlist_url)
         youtube_check = re.search(r'youtube.com/|youtu.be/', playlist_url)
         spotify_check = re.search('spotify.com/', playlist_url)
@@ -65,12 +65,11 @@ class Q:
             return len(song_list)
         
         elif spotify_check != None:
-            song_list = scraping.spotify(playlist_url)
+            song_list = await scraping.spotify(playlist_url)
             print(song_list)
             for song in song_list[startpoint:endpoint]:
                 try:
                     self.build_entry(ctx, song)
-                    # self.guild[ctx.guild].insert(len(self.guild[ctx.guild]), self.entry)
                     self.guild[ctx.guild].insert(add_position, self.entry)  
                 except Exception as e:
                     print(e)
@@ -114,13 +113,13 @@ class Q:
         return self.entry
 
 
-    def add_entry(self, ctx, playlist_url, startpoint, endpoint, position):
+    async def add_entry(self, ctx, playlist_url, startpoint, endpoint, position):
         if ctx.guild not in self.guild:
             self.index[ctx.guild] = INITIAL_INDEX_VALUE
             self.guild[ctx.guild] = list()
             self.loop[ctx.guild] = False
         print(ctx.guild)
-        num_of_songs = self.check_input(ctx, playlist_url, startpoint, endpoint, position)
+        num_of_songs = await self.check_input(ctx, playlist_url, startpoint, endpoint, position)
         return self.entry, num_of_songs
 
         
@@ -188,19 +187,27 @@ class Q:
         return self.index[ctx.guild]
 
 
-    def my_que(self, ctx, page_num):
+    def my_que(self, ctx, page_num, page_size):
         formattedQ = []
         index_count = 1
-        q_view_size = 8
-                    #   False             True                    Condition
-        endpoint    = (q_view_size * page_num, len(self.guild[ctx.guild]))[q_view_size * page_num >= len(self.guild[ctx.guild])]
-        startpoint  = q_view_size * (page_num - 1)
+
+        if_false    = page_size * page_num
+        if_true     = len(self.guild[ctx.guild])
+        condition   = page_size * page_num >= len(self.guild[ctx.guild])
+        endpoint    = (if_false, if_true)[condition]
+        startpoint  = page_size * (page_num - 1)
+
         for entry in self.guild[ctx.guild][startpoint : endpoint]:
-            string = f"{index_count + (q_view_size * (page_num - 1))}. {entry['name']} added by {entry['user'][:-5]}"
+            index   = index_count + (page_size * (page_num - 1))
+            string  = f"{index}. {entry['name']} | [{entry['user'][:-5]}]"
+            
+            if index - 1 == self.index[ctx.guild]:
+                string = ">> " + string
+                
             formattedQ.append(string)
             index_count += 1
-        formattedQ = "\n".join(formattedQ)
 
+        formattedQ = "\n".join(formattedQ)
         return formattedQ
 
 
