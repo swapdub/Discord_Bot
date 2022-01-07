@@ -27,7 +27,7 @@ class Q:
 
     ydl_opts = {
         "format": "bestaudio/best",
-        "postprocessor_args": ["-ar", "48000"], # Audio Freq:48 KHz
+        "postprocessor_args": ["-ar", "192000"], # Audio Freq:192 KHz
         "keepvideo": False,
         "default_search": "auto",
     }
