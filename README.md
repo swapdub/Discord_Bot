@@ -118,6 +118,8 @@ Windows
 ## Music Info Commands
 - link
     - Share Youtube link of the currently playing song
+- dj
+    - Displays the number of songs added by each user 
 - nowplaying
     - Aliases: ```-np```
     - View the song title currently playing
