@@ -148,7 +148,7 @@ async def play(ctx, *, arg):
 
 
 @bot.command(aliases=['pn'])
-async def playnext(ctx, *, arg, startpoint = 0, endpoint = -1):
+async def playnext(ctx, *, arg, startpoint = 0, endpoint = None):
     try:
         SONG_ADD_POSTION = que.index[ctx.guild]  + 1
         song, num_of_songs = await que.add_entry(ctx, arg, startpoint, endpoint, SONG_ADD_POSTION)
@@ -245,7 +245,7 @@ async def vcunmute(ctx):
         await member.edit(mute=False)
 
 @bot.command(aliases=['pa', 'pall'])
-async def playall(ctx, arg, startpoint = 0, endpoint = -1):
+async def playall(ctx, arg, startpoint = 0, endpoint = None):
     vc = ctx.author.voice.channel
     try:
         await vc.connect()
@@ -270,7 +270,7 @@ async def playall(ctx, arg, startpoint = 0, endpoint = -1):
         await ctx.send(f">>> \nAdded to Q: {num_of_songs} songs added by [{song['user'][0:-5]}] \n.")
 
 @bot.command(aliases=['pna', 'pnal', 'pnall'])
-async def playnextall(ctx, arg, startpoint = 0, endpoint = -1):
+async def playnextall(ctx, arg, startpoint = 0, endpoint = None):
     vc = ctx.author.voice.channel
     try:
         await vc.connect()
@@ -285,7 +285,22 @@ async def playnextall(ctx, arg, startpoint = 0, endpoint = -1):
     except:
         await ctx.send(f">>> \nThere is no Queue to add to yet\n.")    
 
+@bot.command(aliases=[])
+async def dj(ctx):
+    output = ["```CSS\nDJs for the current queue are:\n"]
+    dj = []
+    for entry in que.guild[ctx.guild]:
+        dj.append(entry['user'][0:-5])
+    user = set(dj)
+    bullets = 1
+    for name in user:
+        string = f"{bullets}. {name} added: {dj.count(name)} songs"
+        output.append(string)
+        bullets += 1
 
+    output.append('```')
+    await ctx.send("\n".join(output))
 
+# async def history(ctx, arg = ctx.author):
 
 bot.run(my_secret)
