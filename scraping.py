@@ -13,7 +13,7 @@ async def spotify(user_url):
     page = requests.get(user_url)
     print(page.status_code)
 
-    soup = BeautifulSoup(results, 'html.parser')
+    soup = BeautifulSoup(page, 'html.parser')
     track_list = soup.find_all('span', {'class':'track-name'})
     track_list = [tracks.text for tracks in track_list]
     print(track_list)
