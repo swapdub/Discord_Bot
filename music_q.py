@@ -65,7 +65,7 @@ class Q:
             return len(song_list)
         
         elif spotify_check != None:
-            song_list = await scraping.spotify(playlist_url)
+            song_list = spotify.get_song_list(playlist_url)
             print(song_list)
             for song in song_list[startpoint:endpoint]:
                 try:
