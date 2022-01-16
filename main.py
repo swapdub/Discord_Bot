@@ -230,14 +230,12 @@ async def playall(ctx, arg, startpoint = 0, endpoint = None):
         print("AttributeError")
 
     except Exception as e:
-        await ctx.voice_client.disconnect()
-        await vc.connect()
         print(e)
 
-    # try:
-    #     SONG_ADD_POSTION = len(que.guild[ctx.guild])
-    # except:
-    SONG_ADD_POSTION = -1
+    try:
+        SONG_ADD_POSTION = len(que.guild[ctx.guild])
+    except:
+        SONG_ADD_POSTION = -1
 
     song, num_of_songs = que.add_entry(ctx, arg, startpoint, endpoint, SONG_ADD_POSTION)
     
