@@ -92,7 +92,7 @@ async def jump(ctx, arg:int):
     if vcclient.is_playing():
         vcclient.stop()
     play_song_function(ctx, discord, que)
-    await ctx.send(f"\n>>> Now Playing: {que.index[ctx.guild] + 1}.{que.nowplaying(ctx)} [{que.nowplaying(ctx, 'user')}] \n.")
+    await ctx.send(f">>> \nNow Playing: {que.index[ctx.guild] + 1}.{que.nowplaying(ctx)} [{que.nowplaying(ctx, 'user')}] \n.")
 
 
 @bot.command(aliases=['p'])
