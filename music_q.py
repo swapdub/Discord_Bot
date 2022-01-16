@@ -6,8 +6,10 @@ from collections import deque
 import youtube_dl
 import os
 import scraping
+import discord
 
 import spotify
+from utils import play_song_function
 
 # Logic : We have a dict with keys as 'Discord Server(ctx.guild)' name. 
 #         Value is the que which is deque from collections library optimized 
@@ -38,14 +40,15 @@ class Q:
         self.loop = dict()
 
 
-    async def check_input(self, ctx, playlist_url, startpoint, endpoint, add_position):
+    def check_input(self, ctx, playlist_url, startpoint, endpoint, add_position):
         print(playlist_url)
         youtube_check = re.search(r'youtube.com/|youtu.be/', playlist_url)
         spotify_check = re.search('spotify.com/', playlist_url)
 
         if youtube_check != None:
-            song_list = scraping.youtube(playlist_url)
-            for yt_code in song_list[startpoint:endpoint]:
+            song_list = scraping.youtube(playlist_url)[int(startpoint):int(endpoint) if endpoint else None]
+            
+            for yt_code in song_list:
                 try:
                     song_info = self.yt_dl_info(yt_code)
                     self.entry = {
@@ -62,17 +65,32 @@ class Q:
                 except Exception as e:
                     print(e)
 
-            return len(song_list)
+            return len(self)
         
         elif spotify_check != None:
-            song_list = spotify.get_song_list(playlist_url)
+            song_list = spotify.get_song_list(playlist_url)[int(startpoint):int(endpoint) if endpoint else None]
             print(song_list)
-            for song in song_list[startpoint:endpoint]:
+            vcclient = ctx.voice_client
+            ffmpeg_options = {
+            'options': '-vn',
+            "before_options": "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5"
+            }
+            
+            for song in song_list:
                 try:
-                    self.build_entry(ctx, song)
-                    self.guild[ctx.guild].insert(add_position, self.entry)  
+                    song_entry = self.build_entry(ctx, song)
+                    self.guild[ctx.guild].insert(add_position, song_entry)  
+
+                    if not vcclient.is_playing() and self.guild[ctx.guild][1]:
+                        guild_queue = self.guild[ctx.guild]
+                        payload = guild_queue[self.next_track(ctx)]
+                        print("abcd: ", self.index[ctx.guild], song, payload)
+                        vcclient.play(discord.FFmpegPCMAudio(payload["url"], **ffmpeg_options), after = lambda func: play_song_function(ctx, discord, self))
+                        vcclient.source = discord.PCMVolumeTransformer(vcclient.source)
+                        vcclient.source.volume = 1
                 except Exception as e:
                     print(e)
+
             return  len(song_list)
 
         else:
@@ -113,13 +131,13 @@ class Q:
         return self.entry
 
 
-    async def add_entry(self, ctx, playlist_url, startpoint, endpoint, position):
+    def add_entry(self, ctx, playlist_url, startpoint, endpoint, position):
         if ctx.guild not in self.guild:
             self.index[ctx.guild] = INITIAL_INDEX_VALUE
             self.guild[ctx.guild] = list()
             self.loop[ctx.guild] = False
         print(ctx.guild)
-        num_of_songs = await self.check_input(ctx, playlist_url, startpoint, endpoint, position)
+        num_of_songs = self.check_input(ctx, playlist_url, startpoint, endpoint, position)
         return self.entry, num_of_songs
 
         
@@ -179,7 +197,7 @@ class Q:
     def jump(self, ctx, arg):
         arg -= 1
         if arg <= 0:
-            arg = 0
+            arg = -1
         elif arg > len(self.guild[ctx.guild]) - 1:
             arg = len(self.guild[ctx.guild]) - 1
         

@@ -78,6 +78,12 @@ Windows
 
 
 # Command List
+The commands below can be used by typing the following syntax: 
+<br>
+<br>
+
+```-<function_name | Alias>   <required input>   <Optional inputs:...>```
+
 ## Bot controls
 - clear
     - clear current queue      
@@ -95,24 +101,40 @@ Windows
 
 ## Music Player Control Commands
 - play
-    - Aliases: ```-p (song name or link)```
+    - Required: ```<song name or link>```
+    - Aliases: ```-p```
     - Play followed by the name of your Search Query / Song
+
+- playall
+    - Required: ```<song name or link>```
+    - Optional: ```<startpoint> <endpoint>```
+    - Aliases: ```-pa```
+    - Play followed by the url of your Playlist
+    
 - playnext
-    - Aliases: ```-pn (song name or link)```
+    - Required: ```<song name or link>```
+    - Optional: ```<startpoint> <endpoint>```
+    - Aliases: ```-pn```
     - Add the given song to Queue right after the currently playing song
+
+- playallnext
+    - Required: ```<song name or link>```
+    - Optional: ```<startpoint> <endpoint>```
+    - Aliases: ```-pan```
+    - Add the given playlist to Queue right after the currently playing song
 - next
     - Aliases: ```-n```
     - Next song
 - prev
     - Previous Song
 - jump
-    - Aliases: ```-jm (enter number here)```
+    - Aliases: ```-jm <enter number here>```
     - Jump to the specified index number given
 - loop
     - Aliases: ```-l```
     - Loop queue
 - remove
-    - Aliases: ```-rm (song index number)```
+    - Aliases: ```-rm <song index number>```
     - Remove the song with the specified index number (only numbers allowed)
 
 ## Music Info Commands
@@ -131,7 +153,7 @@ Windows
 - save
     - Export and save the current queue to the server database
 - test 
-    - -test *your_message_here*
+    - ```-test <your_message_here>```
     - Responds back with your input message
     
 ## Commands targeted for Among Us Lobbies 

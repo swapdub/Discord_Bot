@@ -57,7 +57,7 @@ def get_song_list(user_url):
                 for item in data_response['tracks']['items']:
                     song_list.append(item['track']['name'])
                     # print(item['track']['name'])
-                print(song_list)
+                # print(song_list)
                 return song_list
 
             else:
@@ -74,10 +74,10 @@ def get_song_list(user_url):
             get_song_list(user_url)        
 
 if __name__ == '__main__':
-    # url = 'https://open.spotify.com/playlist/7Dl3ZKjov0HtLA1K7QkwUY?si=ea8cdd50785b4c9c'
     # url = 'https://open.spotify.com/playlist/33a8Tmb4nA4CRDOnYrjTkr?si=880eaa2d8fb943ce'
     # url = 'https://open.spotify.com/playlist/37i9dQZF1DX4mWCZw6qYIw?si=98e44e4c24aa4f3f'
     # url = 'https://open.spotify.com/playlist/37i9dQZEVXbMDoHDwVN2tF?si=107bd93590e146de'
-    url = 'https://open.spotify.com/playlist/7Dl3ZKjov0HtLA1K7QkwUY?si=ea8cdd50785b4c9c'
+    # url = 'https://open.spotify.com/playlist/7Dl3ZKjov0HtLA1K7QkwUY?si=ea8cdd50785b4c9c'
+    url = 'https://open.spotify.com/track/5HCyWlXZPP0y6Gqq8TgA20?si=b43f1284cd854fdf'
 
     get_song_list(url)
