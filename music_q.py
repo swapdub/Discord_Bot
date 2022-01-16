@@ -9,7 +9,7 @@ import scraping
 import discord
 
 import spotify
-from utils import play_song_function
+from utils import *
 
 # Logic : We have a dict with keys as 'Discord Server(ctx.guild)' name. 
 #         Value is the que which is deque from collections library optimized 
@@ -62,36 +62,24 @@ class Q:
                     }
                     print(song_info['title'])
                     self.guild[ctx.guild].insert(add_position, self.entry)
+                    playall_song_function(ctx, discord, self)
                 except Exception as e:
                     print(e)
-
-            return len(self)
+            return len(song_list)
         
         elif spotify_check != None:
             song_list = spotify.get_song_list(playlist_url)[int(startpoint):int(endpoint) if endpoint else None]
             print(song_list)
-            vcclient = ctx.voice_client
-            ffmpeg_options = {
-            'options': '-vn',
-            "before_options": "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5"
-            }
             
             for song in song_list:
                 try:
                     song_entry = self.build_entry(ctx, song)
                     self.guild[ctx.guild].insert(add_position, song_entry)  
-
-                    if not vcclient.is_playing() and self.guild[ctx.guild][1]:
-                        guild_queue = self.guild[ctx.guild]
-                        payload = guild_queue[self.next_track(ctx)]
-                        print("abcd: ", self.index[ctx.guild], song, payload)
-                        vcclient.play(discord.FFmpegPCMAudio(payload["url"], **ffmpeg_options), after = lambda func: play_song_function(ctx, discord, self))
-                        vcclient.source = discord.PCMVolumeTransformer(vcclient.source)
-                        vcclient.source.volume = 1
+                    playall_song_function(ctx, discord, self)
                 except Exception as e:
                     print(e)
 
-            return  len(song_list)
+            return len(song_list)
 
         else:
             self.build_entry(ctx, playlist_url)

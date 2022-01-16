@@ -92,7 +92,7 @@ async def jump(ctx, arg:int):
     if vcclient.is_playing():
         vcclient.stop()
     play_song_function(ctx, discord, que)
-    await ctx.send(f"\n>>> Now Playing: {que.nowplaying(ctx)} [{que.nowplaying(ctx, 'user')}] \n.")
+    await ctx.send(f"\n>>> Now Playing: {que.index[ctx.guild]}.{que.nowplaying(ctx)} [{que.nowplaying(ctx, 'user')}] \n.")
 
 
 @bot.command(aliases=['p'])
@@ -118,7 +118,7 @@ async def play(ctx, *, arg):
     vcclient = ctx.voice_client
     if not vcclient.is_playing():        
         #using add entry because we want entry song only, no need for index
-        await ctx.send(f">>> \nNow Playing: {song['name']} [{song['user'][0:-5]}] \n.```")
+        await ctx.send(f">>> \nNow Playing: {que.index[ctx.guild]}.{song['name']} [{song['user'][0:-5]}] \n.```")
     else:
         await ctx.send(f">>> \nAdded to Q: {len(que.guild[ctx.guild])}.{song['name']} [{song['user'][0:-5]}] \n.")
 
@@ -155,7 +155,7 @@ async def next(ctx):
     play_song_function(ctx, discord, que)
     
     # Using Now playing because next follows index
-    await ctx.send(f">>> \nNow Playing: {que.nowplaying(ctx)} [{que.nowplaying(ctx, 'user')}] \n.")
+    await ctx.send(f">>> \nNow Playing: {que.index[ctx.guild]}.{que.nowplaying(ctx)} [{que.nowplaying(ctx, 'user')}] \n.")
 
 
 @bot.command(aliases=[])
@@ -169,7 +169,7 @@ async def prev(ctx):
     vcclient.source = discord.PCMVolumeTransformer(vcclient.source)
     vcclient.source.volume = 1
 
-    await ctx.send(f">>> Now Playing: {que.nowplaying(ctx)} [{que.nowplaying(ctx, 'user')}] \n.")
+    await ctx.send(f">>> Now Playing: {que.index[ctx.guild]}.{que.nowplaying(ctx)} [{que.nowplaying(ctx, 'user')}] \n.")
 
 @bot.command(aliases=['q'])
 async def queue(ctx, page = 1):
@@ -223,6 +223,7 @@ async def vcunmute(ctx):
 @bot.command(aliases=['pa', 'pall'])
 async def playall(ctx, arg, startpoint = 0, endpoint = None):
     vc = ctx.author.voice.channel
+    await ctx.send(">>> Please wait ...")
     try:
         await vc.connect()
     except AttributeError: # Dont do anything if error
