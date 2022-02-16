@@ -39,12 +39,15 @@ def youtube(url):
 if __name__ == "__main__":
 
     # url = 'https://www.youtube.com/playlist?list=PL1-ZtxkZHhu25SQgOFe18WTophBrB153b'
+    # url = 'https://youtu.be/playlist?list=PL1-ZtxkZHhu25SQgOFe18WTophBrB153b'
     # url = 'https://www.youtube.com/watch?v=ab3f_SMAidk&list=PL1-ZtxkZHhu25SQgOFe18WTophBrB153b&index=1'
     # url = 'https://www.youtube.com/watch?v=3SDBTVcBUV'
-    # url = 'https://youtu.be/LL5RJ3Is4So'
+    url = 'https://youtu.be/LL5RJ3Is4So'
     # url = 'https://youtu.be/EgFTc6Xwjos'
     # url = 'https://open.spotify.com/track/5PjdY0CKGZdEuoNab3yDmX?si=bd233e25b6224eb9'
     # url = 'https://open.spotify.com/playlist/7Dl3ZKjov0HtLA1K7QkwUY?si=ea8cdd50785b4c9c'
+    # url = 'https://www.youtube.com/watch?v=abEqJxDWPuc&list=RDabEqJxDWPuc&start_radio=1'
+    # url = 'https://www.youtube.com/watch?v=nPA2czkOsFE&start_radio=1&list=RDnPA2czkOsFE'
     # spotify(url)
 
     youtube(url)

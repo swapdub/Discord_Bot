@@ -49,7 +49,7 @@ In-Progress Features and Known Bugs:
 ---
 ## Known Issues and Fixes
 
-
+### Multi-Dict / Wheels
 **_NOTE:_ You may encounter an error while installing multidict package. To fix this try updating setuptools on your distro**
 <br>
 Linux
@@ -60,15 +60,12 @@ Windows
         
         https://visualstudio.microsoft.com/visual-cpp-build-tools/
 
-To install ffmpeg use the following command
+### FFmpeg
+Follow this [tutorial](https://www.wikihow.com/Install-FFmpeg-on-Windows) to install FFmpeg on your Windows PC
 
 Linux
 
         sudo apt install ffmpeg
-Windows
-        
-        https://visualstudio.microsoft.com/visual-cpp-build-tools/
-
 ---
 
 

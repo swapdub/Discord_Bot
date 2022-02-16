@@ -108,11 +108,11 @@ async def play(ctx, *, arg):
     STARTPOINT = 0
     ENDPOINT = 1
     try:
-        SONG_ADD_POSTION = len(que.guild[ctx.guild])
+        SONG_ADD_POSITION = len(que.guild[ctx.guild])
     except:
-        SONG_ADD_POSTION = 0
+        SONG_ADD_POSITION = 0
 
-    song, num_of_songs = que.add_entry(ctx, arg, STARTPOINT, ENDPOINT, SONG_ADD_POSTION)
+    song, num_of_songs = await que.add_entry(ctx, arg, STARTPOINT, ENDPOINT, SONG_ADD_POSITION)
         
     play_song_function(ctx, discord, que)
     vcclient = ctx.voice_client
@@ -126,8 +126,8 @@ async def play(ctx, *, arg):
 @bot.command(aliases=['pn'])
 async def playnext(ctx, *, arg, startpoint = 0, endpoint = None):
     try:
-        SONG_ADD_POSTION = que.index[ctx.guild]  + 1
-        song, num_of_songs = que.add_entry(ctx, arg, startpoint, endpoint, SONG_ADD_POSTION)
+        SONG_ADD_POSITION = que.index[ctx.guild]  + 1
+        song, num_of_songs = await que.add_entry(ctx, arg, startpoint, endpoint, SONG_ADD_POSITION)
         await ctx.send(f">>> \nAdded to Q: \n{que.index[ctx.guild] + 1}.{song['name']} [{song['user'][0:-5]}] \n.")
     except:
         await ctx.send(f">>> \nThere is no Queue to add to yet \n.")    
@@ -233,11 +233,11 @@ async def playall(ctx, arg, startpoint = 0, endpoint = None):
         print(e)
 
     try:
-        SONG_ADD_POSTION = len(que.guild[ctx.guild])
+        SONG_ADD_POSITION = len(que.guild[ctx.guild])
     except:
-        SONG_ADD_POSTION = -1
+        SONG_ADD_POSITION = -1
 
-    song, num_of_songs = que.add_entry(ctx, arg, startpoint, endpoint, SONG_ADD_POSTION)
+    song, num_of_songs = await que.add_entry(ctx, arg, startpoint, endpoint, SONG_ADD_POSITION)
     
     # play_song_function(ctx, discord, que)
     vcclient = ctx.voice_client
@@ -257,9 +257,9 @@ async def playnextall(ctx, arg, startpoint = 0, endpoint = None):
     except Exception as e:
         print(e)
     try:
-        SONG_ADD_POSTION = que.index[ctx.guild] + 1
-        song, num_of_songs = que.add_entry(ctx, arg, startpoint, endpoint, SONG_ADD_POSTION)
-        await ctx.send(f">>> \nAdded to Q: \n{num_of_songs} songs added by [{song['user'][0:-5]}] at index {SONG_ADD_POSTION}\n.")
+        SONG_ADD_POSITION = que.index[ctx.guild] + 1
+        song, num_of_songs = await que.add_entry(ctx, arg, startpoint, endpoint, SONG_ADD_POSITION)
+        await ctx.send(f">>> \nAdded to Q: \n{num_of_songs} songs added by [{song['user'][0:-5]}] at index {SONG_ADD_POSITION}\n.")
     except:
         await ctx.send(f">>> \nThere is no Queue to add to yet\n.")    
 
