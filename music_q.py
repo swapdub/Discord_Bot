@@ -40,13 +40,18 @@ class Q:
         self.loop = dict()
 
 
-    def check_input(self, ctx, playlist_url, startpoint, endpoint, add_position):
+    async def check_input(self, ctx, playlist_url, startpoint, endpoint, add_position):
         print(playlist_url)
         youtube_check = re.search(r'youtube.com/|youtu.be/', playlist_url)
         spotify_check = re.search('spotify.com/', playlist_url)
 
         if youtube_check != None:
-            song_list = scraping.youtube(playlist_url)[int(startpoint):int(endpoint) if endpoint else None]
+            try:
+                song_list = scraping.youtube(playlist_url)[int(startpoint):int(endpoint) if endpoint else None]
+            except:
+                await ctx.send(">>> ------------------Link not supported------------------\
+                     \n (Youtube Mixes and private links not available from YT API) \n------------------Try again------------------ 😅\n.")
+                return
             
             for yt_code in song_list:
                 try:
@@ -119,13 +124,13 @@ class Q:
         return self.entry
 
 
-    def add_entry(self, ctx, playlist_url, startpoint, endpoint, position):
+    async def add_entry(self, ctx, playlist_url, startpoint, endpoint, position):
         if ctx.guild not in self.guild:
             self.index[ctx.guild] = INITIAL_INDEX_VALUE
             self.guild[ctx.guild] = list()
             self.loop[ctx.guild] = False
         print(ctx.guild)
-        num_of_songs = self.check_input(ctx, playlist_url, startpoint, endpoint, position)
+        num_of_songs = await self.check_input(ctx, playlist_url, startpoint, endpoint, position)
         return self.entry, num_of_songs
 
         
