@@ -1,0 +1,11 @@
+body{
+  background: hsl(240, 67%, 84%);
+  min-height: 100vh;
+}
+
+.center{
+  display: grid;
+  place-self: center;
+  height: 100%;
+  width: 100%;
+}
