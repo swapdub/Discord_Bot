@@ -2,8 +2,8 @@
 import os
 import re
 import json
-import discord
-from discord.ext import commands
+import diskord
+from diskord.ext import commands
 
 # user Libraries
 from music_q import Q
@@ -17,7 +17,7 @@ my_secret = discord_token
 
 
 # Discord added this as an extra permission to allow retrieving members related data
-intents = discord.Intents().all()
+intents = diskord.Intents().all()
 
 bot = commands.Bot(command_prefix='-', intents = intents)
 
@@ -91,7 +91,7 @@ async def jump(ctx, arg:int):
     vcclient = ctx.voice_client
     if vcclient.is_playing():
         vcclient.stop()
-    play_song_function(ctx, discord, que)
+    play_song_function(ctx, diskord, que)
     await ctx.send(f">>> \nNow Playing: \n{que.index[ctx.guild] + 1}.{que.nowplaying(ctx)} [{que.nowplaying(ctx, 'user')}] \n.")
 
 
@@ -114,7 +114,7 @@ async def play(ctx, *, arg):
 
     song, num_of_songs = await que.add_entry(ctx, arg, STARTPOINT, ENDPOINT, SONG_ADD_POSITION)
         
-    play_song_function(ctx, discord, que)
+    play_song_function(ctx, diskord, que)
     vcclient = ctx.voice_client
     if not vcclient.is_playing():        
         #using add entry because we want entry song only, no need for index
@@ -152,7 +152,7 @@ async def next(ctx):
     vcclient = ctx.voice_client
     if vcclient.is_playing():
         vcclient.stop()
-    play_song_function(ctx, discord, que)
+    play_song_function(ctx, diskord, que)
     
     # Using Now playing because next follows index
     await ctx.send(f">>> \nNow Playing: \n{que.index[ctx.guild] + 1}.{que.nowplaying(ctx)} [{que.nowplaying(ctx, 'user')}] \n.")
@@ -165,8 +165,8 @@ async def prev(ctx):
     vcclient = ctx.voice_client
     if vcclient.is_playing():
       vcclient.stop()
-    vcclient.play(discord.FFmpegPCMAudio(my_que))
-    vcclient.source = discord.PCMVolumeTransformer(vcclient.source)
+    vcclient.play(diskord.FFmpegPCMAudio(my_que))
+    vcclient.source = diskord.PCMVolumeTransformer(vcclient.source)
     vcclient.source.volume = 1
 
     await ctx.send(f">>> Now Playing: \n{que.index[ctx.guild] + 1}.{que.nowplaying(ctx)} [{que.nowplaying(ctx, 'user')}] \n.")
@@ -239,7 +239,7 @@ async def playall(ctx, arg, startpoint = 0, endpoint = None):
 
     song, num_of_songs = await que.add_entry(ctx, arg, startpoint, endpoint, SONG_ADD_POSITION)
     
-    # play_song_function(ctx, discord, que)
+    # play_song_function(ctx, diskord, que)
     vcclient = ctx.voice_client
     if not vcclient.is_playing():        
         # using add entry because we want entry song only, no need for index
