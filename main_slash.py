@@ -19,8 +19,8 @@ my_secret = discord_token
 
 
 # Discord added this as an extra permission to allow retrieving members related data
-# client = commands.Bot(command_prefix='$', application_command_guild_ids=[test_server])
-client = diskord.Client(application_command_guild_ids=[test_server])
+# client = diskord.Client(application_command_guild_ids=[test_server]) # For testing
+client = diskord.Client()
 
 que = Q()
 
