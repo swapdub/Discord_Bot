@@ -141,6 +141,8 @@ async def play(ctx, arg: str):
 
 @client.slash_command(description="Add song right after currently playing song")
 @diskord.application.option('arg')
+@diskord.application.option('startpoint')
+@diskord.application.option('endpoint')
 async def playnext(ctx, *, arg, startpoint = 0, endpoint = None):
     try:
         SONG_ADD_POSITION = que.index[ctx.guild]  + 1
@@ -260,6 +262,8 @@ async def vc_unmute(ctx):
 
 @client.slash_command(description="Add Playlist to queue")
 @diskord.application.option('arg')
+@diskord.application.option('startpoint', description="Begin adding from index num:")
+@diskord.application.option('endpoint', description="Add song till index num: ")
 async def playall(ctx, arg, startpoint = 0, endpoint = None):
     vc = ctx.author.voice.channel
     await ctx.respond(">>> Please wait ...")
@@ -288,6 +292,8 @@ async def playall(ctx, arg, startpoint = 0, endpoint = None):
 
 @client.slash_command(description="Add Playlist right after now playing")
 @diskord.application.option('arg')
+@diskord.application.option('startpoint', description= "Begin adding from num: ")
+@diskord.application.option('endpoint', description= "Add till index num: ")
 async def playnextall(ctx, arg, startpoint = 0, endpoint = None):
     vc = ctx.author.voice.channel
     try:
