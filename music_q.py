@@ -67,7 +67,7 @@ class Q:
                     }
                     print(song_info['title'])
                     self.guild[ctx.guild].insert(add_position, self.entry)
-                    playall_song_function(ctx, discord, self)
+                    await playall_song_function(ctx, discord, self)
                 except Exception as e:
                     print(e)
             return len(song_list)
@@ -80,7 +80,7 @@ class Q:
                 try:
                     song_entry = self.build_entry(ctx, song)
                     self.guild[ctx.guild].insert(add_position, song_entry)  
-                    playall_song_function(ctx, discord, self)
+                    await playall_song_function(ctx, discord, self)
                 except Exception as e:
                     print(e)
 
