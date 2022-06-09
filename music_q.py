@@ -10,7 +10,7 @@ import os
 import scraping
 import discord
 
-import spotify
+from scrape_Spotify import spotify_class
 # from utils import *
 
 # Logic : We have a dict with keys as 'Discord Server(ctx.guild)' name. 
@@ -66,7 +66,6 @@ class Q:
                 await ctx.send(">>> ------------------Link not supported------------------\
                      \n (Youtube Mixes and private links not available from YT API) \n------------------Try again------------------ 😅\n.")
                 return
-
         
         elif spotify_check != None:
             playlist_check = re.search('playlist', playlist_url)
@@ -75,7 +74,7 @@ class Q:
             else:
                 await ctx.send(">>> Please wait ...")
 
-            song_list = spotify.get_song_list(playlist_url)[int(startpoint):endpoint]
+            song_list = spotify_class.spotify_song_list(playlist_url)[int(startpoint):endpoint]
             await self.play_each_song(song_list, ctx, add_position)
             await self.song_add_disp_msg(playlist_check, ctx, song_list, add_position)
             return len(song_list)

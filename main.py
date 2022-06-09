@@ -10,7 +10,7 @@ from discord.ext import commands
 from music_q import Q
 from secret import discord_token
 import scraping
-import spotify
+import scrape_Spotify
 from utils import play_song_function
 
 
