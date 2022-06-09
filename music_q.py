@@ -8,7 +8,7 @@ import os
 import scraping
 import discord
 
-import spotify
+import scrape_Spotify
 from utils import *
 
 # Logic : We have a dict with keys as 'Discord Server(ctx.guild)' name. 
@@ -73,7 +73,7 @@ class Q:
             return len(song_list)
         
         elif spotify_check != None:
-            song_list = spotify.get_song_list(playlist_url)[int(startpoint):int(endpoint) if endpoint else None]
+            song_list = scrape_Spotify.get_song_list(playlist_url)[int(startpoint):int(endpoint) if endpoint else None]
             print(song_list)
             
             for song in song_list:
