@@ -44,6 +44,7 @@ class Q:
         print(playlist_url)
         youtube_check = re.search(r'youtube.com/|youtu.be/', playlist_url)
         spotify_check = re.search('spotify.com/', playlist_url)
+        http_check = re.search('https:', playlist_url)
 
         if youtube_check != None:
             try:
@@ -56,15 +57,7 @@ class Q:
             for yt_code in song_list:
                 try:
                     song_info = self.yt_dl_info(yt_code)
-                    self.entry = {
-                        "guild": str(ctx.guild),
-                        "channel": str(ctx.author.voice.channel),
-                        "user": str(ctx.author),
-                        "time": str(datetime.datetime.now()),
-                        "name": song_info["title"],
-                        "YT-video": "https://www.youtube.com/watch?v=" + yt_code,
-                        "url": song_info["url"]
-                    }
+                    self.entry = self.build_entry(ctx, song_info, yt_code)
                     print(song_info['title'])
                     self.guild[ctx.guild].insert(add_position, self.entry)
                     playall_song_function(ctx, discord, self)
@@ -78,13 +71,22 @@ class Q:
             
             for song in song_list:
                 try:
-                    song_entry = self.build_entry(ctx, song)
+                    song_info, yt_code = self.get_yt_code(song)
+                    song_entry = self.build_entry(ctx, song_info, yt_code)
                     self.guild[ctx.guild].insert(add_position, song_entry)  
                     playall_song_function(ctx, discord, self)
                 except Exception as e:
                     print(e)
 
             return len(song_list)
+
+        elif http_check != None:
+            try:
+                song_list = scraping.youtube(playlist_url)[int(startpoint):int(endpoint) if endpoint else None]
+            except:
+                await ctx.send(">>> ------------------Link not supported------------------\
+                     \n (Only Youtube and Spotify Link work) \n------------------Try again------------------ 😅\n.")
+                return
 
         else:
             self.build_entry(ctx, playlist_url)
@@ -110,8 +112,8 @@ class Q:
 
         return song_info, yt_code
 
-    def build_entry(self, ctx, search_term):
-        song_info, yt_code = self.get_yt_code(search_term)
+    def build_entry(self, ctx, song_info, yt_code):
+        # song_info, yt_code = self.get_yt_code(search_term)
         self.entry = {
             "guild": str(ctx.guild),
             "channel": str(ctx.author.voice.channel),
