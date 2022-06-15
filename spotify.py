@@ -45,20 +45,29 @@ def get_song_list(user_url):
         
         if access_token:
             print (f'Fetching access token from file : {access_token}')
+            playlist = user_url.find('playlist')
+            solo_track_id = user_url.strip('https://open.spotify.com/track/')
             playlist_id = user_url.strip('https://open.spotify.com/playlist/')
-            url = f'https://api.spotify.com/v1/playlists/{playlist_id}'
+            print(playlist_id, solo_track_id)
+            if playlist != -1:
+                url = f'https://api.spotify.com/v1/playlists/{playlist_id}'
+            else:
+                url =  f'https://api.spotify.com/v1/tracks/{solo_track_id}'
             headers = {'Authorization': f'Bearer {access_token}', 'Content-Type': 'application/json'}
             
             page = requests.get(url=url, headers=headers)
             if page.status_code == 200:
                 data_response = page.json()
-
+                # print (data_response)
                 song_list = []
-                for item in data_response['tracks']['items']:
-                    song_list.append(item['track']['name'])
-                    # print(item['track']['name'])
-                print(song_list)
-                return song_list
+                if playlist != -1:
+                    for item in data_response['tracks']['items']:
+                        song_list.append(f"{item['track']['name']} by {item['track']['artists'][0]['name']}")
+                    print(song_list)
+                    return song_list
+                else:
+                    print ([data_response['name']])
+                    return ([data_response['name']])
 
             else:
                 with open("access_token.txt", 'w'):
@@ -74,10 +83,11 @@ def get_song_list(user_url):
             get_song_list(user_url)        
 
 if __name__ == '__main__':
-    # url = 'https://open.spotify.com/playlist/7Dl3ZKjov0HtLA1K7QkwUY?si=ea8cdd50785b4c9c'
     # url = 'https://open.spotify.com/playlist/33a8Tmb4nA4CRDOnYrjTkr?si=880eaa2d8fb943ce'
     # url = 'https://open.spotify.com/playlist/37i9dQZF1DX4mWCZw6qYIw?si=98e44e4c24aa4f3f'
     # url = 'https://open.spotify.com/playlist/37i9dQZEVXbMDoHDwVN2tF?si=107bd93590e146de'
     url = 'https://open.spotify.com/playlist/7Dl3ZKjov0HtLA1K7QkwUY?si=ea8cdd50785b4c9c'
+    # url = 'https://open.spotify.com/track/3KkXRkHbMCARz0aVfEt68P?si=69b00587b46247a9'
+    # url = 'https://open.spotify.com/track/3KkXRkHbMCARz0aVfEt68P'
 
     get_song_list(url)

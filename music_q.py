@@ -6,8 +6,10 @@ from collections import deque
 import youtube_dl
 import os
 import scraping
+import discord
 
 import spotify
+from utils import *
 
 # Logic : We have a dict with keys as 'Discord Server(ctx.guild)' name. 
 #         Value is the que which is deque from collections library optimized 
@@ -44,8 +46,14 @@ class Q:
         spotify_check = re.search('spotify.com/', playlist_url)
 
         if youtube_check != None:
-            song_list = scraping.youtube(playlist_url)
-            for yt_code in song_list[startpoint:endpoint]:
+            try:
+                song_list = scraping.youtube(playlist_url)[int(startpoint):int(endpoint) if endpoint else None]
+            except:
+                await ctx.send(">>> ------------------Link not supported------------------\
+                     \n (Youtube Mixes and private links not available from YT API) \n------------------Try again------------------ 😅\n.")
+                return
+            
+            for yt_code in song_list:
                 try:
                     song_info = self.yt_dl_info(yt_code)
                     self.entry = {
@@ -59,21 +67,24 @@ class Q:
                     }
                     print(song_info['title'])
                     self.guild[ctx.guild].insert(add_position, self.entry)
+                    playall_song_function(ctx, discord, self)
+                except Exception as e:
+                    print(e)
+            return len(song_list)
+        
+        elif spotify_check != None:
+            song_list = spotify.get_song_list(playlist_url)[int(startpoint):int(endpoint) if endpoint else None]
+            print(song_list)
+            
+            for song in song_list:
+                try:
+                    song_entry = self.build_entry(ctx, song)
+                    self.guild[ctx.guild].insert(add_position, song_entry)  
+                    playall_song_function(ctx, discord, self)
                 except Exception as e:
                     print(e)
 
             return len(song_list)
-        
-        elif spotify_check != None:
-            song_list = spotify.get_song_list(playlist_url)
-            print(song_list)
-            for song in song_list[startpoint:endpoint]:
-                try:
-                    self.build_entry(ctx, song)
-                    self.guild[ctx.guild].insert(add_position, self.entry)  
-                except Exception as e:
-                    print(e)
-            return  len(song_list)
 
         else:
             self.build_entry(ctx, playlist_url)
@@ -179,7 +190,7 @@ class Q:
     def jump(self, ctx, arg):
         arg -= 1
         if arg <= 0:
-            arg = 0
+            arg = -1
         elif arg > len(self.guild[ctx.guild]) - 1:
             arg = len(self.guild[ctx.guild]) - 1
         
