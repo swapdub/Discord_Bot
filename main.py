@@ -169,7 +169,7 @@ async def playnext(ctx, *arg):
     
 @bot.command(aliases=['i'])
 async def index(ctx):
-    await ctx.send(f">>> Current Song Index : {que.index[ctx.guild] + 1} | Queue Looping: {que.loop[ctx.guild]}")
+    await ctx.send(f">>> Current Song Index : {que.index[ctx.guild] + 1} | Looping: {que.loop[ctx.guild]} | Shuffle: {que.shuffle[ctx.guild]}")
 
 @bot.command()
 async def ping(ctx):
