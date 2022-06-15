@@ -96,7 +96,7 @@ async def jump(ctx, arg:int):
 
 
 @bot.command(aliases=['p'])
-async def play(ctx, *, arg):
+async def play(ctx, *, arg, STARTPOINT = 0, ENDPOINT = None):
     vc = ctx.author.voice.channel
     try:
         await vc.connect()
@@ -105,8 +105,6 @@ async def play(ctx, *, arg):
     except Exception as e:
         print(e)
 
-    STARTPOINT = 0
-    ENDPOINT = 1
     try:
         SONG_ADD_POSITION = len(que.guild[ctx.guild])
     except:
@@ -114,7 +112,7 @@ async def play(ctx, *, arg):
 
     song, num_of_songs = await que.add_entry(ctx, arg, STARTPOINT, ENDPOINT, SONG_ADD_POSITION)
         
-    play_song_function(ctx, discord, que)
+    # play_song_function(ctx, discord, que)
     vcclient = ctx.voice_client
     if not vcclient.is_playing():        
         #using add entry because we want entry song only, no need for index
@@ -125,6 +123,14 @@ async def play(ctx, *, arg):
 
 @bot.command(aliases=['pn'])
 async def playnext(ctx, *, arg, startpoint = 0, endpoint = None):
+    vc = ctx.author.voice.channel
+    try:
+        await vc.connect()
+    except AttributeError: # Dont do anything if error
+        print("AttributeError")
+    except Exception as e:
+        print(e)
+
     try:
         SONG_ADD_POSITION = que.index[ctx.guild]  + 1
         song, num_of_songs = await que.add_entry(ctx, arg, startpoint, endpoint, SONG_ADD_POSITION)

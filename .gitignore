@@ -17,6 +17,7 @@ spoti.py
 youtube.py
 *.json
 *.txt
+test/
 
 # Extras
 bot_workspace.*
