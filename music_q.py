@@ -1,3 +1,4 @@
+from random import randint
 import re
 import json
 import requests
@@ -38,7 +39,7 @@ class Q:
         self.index = dict()
         self.entry = dict()
         self.loop = dict()
-        self.q_range = dict()
+        self.shuffle = dict()
 
 
     async def check_input(self, ctx, playlist_url, startpoint, endpoint, add_position):
@@ -55,17 +56,16 @@ class Q:
                 await ctx.send(">>> Please wait ...")
 
             try:
-                song_list = scraping.youtube(playlist_url)[int(startpoint):int(endpoint) if endpoint else None]
+                print(f"endpoint is: {endpoint}")
+                song_list = scraping.youtube(playlist_url)[int(startpoint):endpoint]
+                await self.play_each_song(song_list, ctx, add_position)
+                await self.song_add_disp_msg(playlist_check, ctx, song_list, add_position)
+                return len(song_list)
             except:
                 await ctx.send(">>> ------------------Link not supported------------------\
                      \n (Youtube Mixes and private links not available from YT API) \n------------------Try again------------------ 😅\n.")
                 return
-            await self.play_each_song(song_list, ctx, add_position)
 
-            if playlist_check:
-                await ctx.send(f">>> \nAdded to Q: \n{len(song_list)} songs added by [{self.entry['user'][0:-5]}] at index {add_position}\n.")
-
-            return len(song_list)
         
         elif spotify_check != None:
             playlist_check = re.search('playlist', playlist_url)
@@ -74,12 +74,9 @@ class Q:
             else:
                 await ctx.send(">>> Please wait ...")
 
-            song_list = spotify.get_song_list(playlist_url)[int(startpoint):int(endpoint) if endpoint else None]
+            song_list = spotify.get_song_list(playlist_url)[int(startpoint):endpoint]
             await self.play_each_song(song_list, ctx, add_position)
-
-            if playlist_check:
-                await ctx.send(f">>> \nAdded to Q: \n{len(song_list)} songs added by [{self.entry['user'][0:-5]}] at index {add_position}\n.")
-
+            await self.song_add_disp_msg(playlist_check, ctx, song_list, add_position)
             return len(song_list)
 
         elif http_check != None:
@@ -88,17 +85,28 @@ class Q:
             return
 
         else:
+            playlist_check = False
             song_info, yt_code = self.get_yt_code(playlist_url)
             self.build_entry(ctx, song_info, yt_code)
             self.guild[ctx.guild].insert(add_position, self.entry) 
             await playall_song_function(ctx, discord, self)
+            await self.song_add_disp_msg(playlist_check, ctx, song_info, add_position)
             return 1
     
+    async def song_add_disp_msg(self, playlist_check, ctx, song_list, add_position):
+        if playlist_check:
+            await ctx.send(f">>> \nAdded to Q: \n{len(song_list)} songs added by [{self.entry['user'][0:-5]}] at index {add_position+1}\n.")
+        else:
+            if self.index[ctx.guild] != add_position:
+               await ctx.send(f">>> \nAdded to Q: \n{add_position+1}. {self.entry['name']} 🎶 [{self.entry['user'][0:-5]}] \n.")
+            else:
+               await ctx.send(f">>> \nNow Playing: \n{add_position+1}. {self.entry['name']} 🎶 [{self.entry['user'][0:-5]}] \n.")
+
+    
     async def play_each_song(self, song_list, ctx, add_position):
-        print(song_list)
+        print("Its a playlist 👍")
         for song in song_list:
             try:
-                print("Its a playlist 👍")
                 song_info, yt_code = self.get_yt_code(song)
                 song_entry = self.build_entry(ctx, song_info, yt_code)
                 self.guild[ctx.guild].insert(add_position, song_entry)  
@@ -144,14 +152,8 @@ class Q:
             self.index[ctx.guild] = self.INITIAL_INDEX_VALUE
             self.guild[ctx.guild] = list()
             self.loop[ctx.guild] = False
-        self.q_range = {
-            ctx.guild : {
-                "startpoint" : startpoint,
-                "endpoint" : endpoint,
-                "position" : position,
-            }
-        }
-        print(ctx.guild)
+            self.shuffle[ctx.guild] = False
+
         num_of_songs = await self.check_input(ctx, playlist_url, startpoint, endpoint, position)
         return self.entry, num_of_songs
 
@@ -166,6 +168,11 @@ class Q:
 
 
     def next_track(self, ctx):
+        if self.shuffle[ctx.guild]:
+            random = randint(0, len(self.guild[ctx.guild]) - 1)
+            print(f"Index is : {random}")
+            self.index[ctx.guild] = random
+            
         self.index[ctx.guild] += 1
         if self.index[ctx.guild] > len(self.guild[ctx.guild]) - 1:
             if self.loop[ctx.guild]:
@@ -183,6 +190,15 @@ class Q:
             self.loop[ctx.guild] = False
         print(f'Currently Looping: {self.loop[ctx.guild]}')
         return self.loop[ctx.guild]
+
+
+    def shuffle_switch(self, ctx):
+        if self.shuffle[ctx.guild] == False:
+            self.shuffle[ctx.guild] = True
+        elif self.shuffle[ctx.guild] == True:
+            self.shuffle[ctx.guild] = False
+        print(f'Currently shuffleing: {self.shuffle[ctx.guild]}')
+        return self.shuffle[ctx.guild]
 
 
     def prev_track(self, ctx):

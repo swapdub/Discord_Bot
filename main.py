@@ -79,6 +79,13 @@ async def loop(ctx):
     else:
         await ctx.send(f">>> Queue Looping disabled")
 
+@bot.command(aliases=['sh'])
+async def shuffle(ctx):
+    if que.shuffle_switch(ctx):
+        await ctx.send(f">>> Now shuffleing Queue")
+    else:
+        await ctx.send(f">>> Queue shuffleing disabled")
+
 
 @bot.command(aliases=['t'])
 async def test(ctx, *, arg):
@@ -96,7 +103,23 @@ async def jump(ctx, arg:int):
 
 
 @bot.command(aliases=['p'])
-async def play(ctx, *, arg, STARTPOINT = 0, ENDPOINT = None):
+async def play(ctx, *arg):
+    http_check = re.search('http', arg[0])
+    if not http_check:
+        arg = " ".join(arg)
+        STARTPOINT = 0
+        ENDPOINT = None
+    else:
+        if len(arg) > 3:
+            STARTPOINT = int(arg[-2])
+            ENDPOINT = int(arg[-1])
+            arg = " ".join(arg[0:-2])
+        else:
+            STARTPOINT = 0
+            ENDPOINT = None
+            arg = " ".join(arg)
+
+
     vc = ctx.author.voice.channel
     try:
         await vc.connect()
@@ -110,19 +133,26 @@ async def play(ctx, *, arg, STARTPOINT = 0, ENDPOINT = None):
     except:
         SONG_ADD_POSITION = 0
 
-    song, num_of_songs = await que.add_entry(ctx, arg, STARTPOINT, ENDPOINT, SONG_ADD_POSITION)
-        
-    # play_song_function(ctx, discord, que)
-    vcclient = ctx.voice_client
-    if not vcclient.is_playing():        
-        #using add entry because we want entry song only, no need for index
-        await ctx.send(f">>> \nNow Playing: \n{que.index[ctx.guild] + 1}.{song['name']} [{song['user'][0:-5]}] \n.```")
-    else:
-        await ctx.send(f">>> \nAdded to Q: \n{len(que.guild[ctx.guild])}.{song['name']} [{song['user'][0:-5]}] \n.")
-
+    await que.add_entry(ctx, arg, STARTPOINT, ENDPOINT, SONG_ADD_POSITION)
+    return
 
 @bot.command(aliases=['pn'])
-async def playnext(ctx, *, arg, startpoint = 0, endpoint = None):
+async def playnext(ctx, *arg):
+    http_check = re.search('http', arg[0])
+    if not http_check:
+        arg = " ".join(arg)
+        STARTPOINT = 0
+        ENDPOINT = None
+    else:
+        if len(arg) > 3:
+            STARTPOINT = int(arg[-2])
+            ENDPOINT = int(arg[-1])
+            arg = " ".join(arg[0:-2])
+        else:
+            STARTPOINT = 0
+            ENDPOINT = -1
+            arg = " ".join(arg)
+
     vc = ctx.author.voice.channel
     try:
         await vc.connect()
@@ -133,8 +163,7 @@ async def playnext(ctx, *, arg, startpoint = 0, endpoint = None):
 
     try:
         SONG_ADD_POSITION = que.index[ctx.guild]  + 1
-        song, num_of_songs = await que.add_entry(ctx, arg, startpoint, endpoint, SONG_ADD_POSITION)
-        await ctx.send(f">>> \nAdded to Q: \n{que.index[ctx.guild] + 1}.{song['name']} [{song['user'][0:-5]}] \n.")
+        song, num_of_songs = await que.add_entry(ctx, arg, STARTPOINT, ENDPOINT, SONG_ADD_POSITION)
     except:
         await ctx.send(f">>> \nThere is no Queue to add to yet \n.")    
     
@@ -227,7 +256,7 @@ async def vcunmute(ctx):
         await member.edit(mute=False)
 
 @bot.command(aliases=['pa', 'pall'])
-async def playall(ctx, arg, startpoint = 0, endpoint = None):
+async def playall(ctx, arg, STARTPOINT = 0, ENDPOINT = None):
     vc = ctx.author.voice.channel
     await ctx.send(">>> Please wait ...")
     try:
@@ -243,7 +272,7 @@ async def playall(ctx, arg, startpoint = 0, endpoint = None):
     except:
         SONG_ADD_POSITION = -1
 
-    song, num_of_songs = await que.add_entry(ctx, arg, startpoint, endpoint, SONG_ADD_POSITION)
+    song, num_of_songs = await que.add_entry(ctx, arg, STARTPOINT, ENDPOINT, SONG_ADD_POSITION)
     
     # play_song_function(ctx, discord, que)
     vcclient = ctx.voice_client
@@ -254,7 +283,7 @@ async def playall(ctx, arg, startpoint = 0, endpoint = None):
         await ctx.send(f">>> \nAdded to Q: \n{num_of_songs} songs added by [{song['user'][0:-5]}] at index {len(que.guild[ctx.guild])}\n.")
 
 @bot.command(aliases=['pna', 'pnal', 'pnall'])
-async def playnextall(ctx, arg, startpoint = 0, endpoint = None):
+async def playnextall(ctx, arg, STARTPOINT = 0, ENDPOINT = None):
     vc = ctx.author.voice.channel
     try:
         await vc.connect()
@@ -264,7 +293,7 @@ async def playnextall(ctx, arg, startpoint = 0, endpoint = None):
         print(e)
     try:
         SONG_ADD_POSITION = que.index[ctx.guild] + 1
-        song, num_of_songs = await que.add_entry(ctx, arg, startpoint, endpoint, SONG_ADD_POSITION)
+        song, num_of_songs = await que.add_entry(ctx, arg, STARTPOINT, ENDPOINT, SONG_ADD_POSITION)
         await ctx.send(f">>> \nAdded to Q: \n{num_of_songs} songs added by [{song['user'][0:-5]}] at index {SONG_ADD_POSITION}\n.")
     except:
         await ctx.send(f">>> \nThere is no Queue to add to yet\n.")    
