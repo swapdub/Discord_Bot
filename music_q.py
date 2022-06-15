@@ -23,10 +23,10 @@ from utils import *
 #           |
 #    Each Song entry 
 
-INITIAL_INDEX_VALUE = -1
 
 class Q:
 
+    INITIAL_INDEX_VALUE = -1
     ydl_opts = {
         "format": "bestaudio/best",
         "postprocessor_args": ["-ar", "192000"], # Audio Freq:192 KHz
@@ -38,59 +38,74 @@ class Q:
         self.index = dict()
         self.entry = dict()
         self.loop = dict()
+        self.q_range = dict()
 
 
     async def check_input(self, ctx, playlist_url, startpoint, endpoint, add_position):
         print(playlist_url)
         youtube_check = re.search(r'youtube.com/|youtu.be/', playlist_url)
         spotify_check = re.search('spotify.com/', playlist_url)
+        http_check = re.search('https:', playlist_url)
 
         if youtube_check != None:
+            playlist_check = re.search('list=', playlist_url)
+            if not playlist_check:
+                endpoint = 1
+            else:
+                await ctx.send(">>> Please wait ...")
+
             try:
                 song_list = scraping.youtube(playlist_url)[int(startpoint):int(endpoint) if endpoint else None]
             except:
                 await ctx.send(">>> ------------------Link not supported------------------\
                      \n (Youtube Mixes and private links not available from YT API) \n------------------Try again------------------ 😅\n.")
                 return
-            
-            for yt_code in song_list:
-                try:
-                    song_info = self.yt_dl_info(yt_code)
-                    self.entry = {
-                        "guild": str(ctx.guild),
-                        "channel": str(ctx.author.voice.channel),
-                        "user": str(ctx.author),
-                        "time": str(datetime.datetime.now()),
-                        "name": song_info["title"],
-                        "YT-video": "https://www.youtube.com/watch?v=" + yt_code,
-                        "url": song_info["url"]
-                    }
-                    print(song_info['title'])
-                    self.guild[ctx.guild].insert(add_position, self.entry)
-                    playall_song_function(ctx, discord, self)
-                except Exception as e:
-                    print(e)
+            await self.play_each_song(song_list, ctx, add_position)
+
+            if playlist_check:
+                await ctx.send(f">>> \nAdded to Q: \n{len(song_list)} songs added by [{self.entry['user'][0:-5]}] at index {add_position}\n.")
+
             return len(song_list)
         
         elif spotify_check != None:
+            playlist_check = re.search('playlist', playlist_url)
+            if not playlist_check:
+                endpoint = 1
+            else:
+                await ctx.send(">>> Please wait ...")
+
             song_list = spotify.get_song_list(playlist_url)[int(startpoint):int(endpoint) if endpoint else None]
-            print(song_list)
-            
-            for song in song_list:
-                try:
-                    song_entry = self.build_entry(ctx, song)
-                    self.guild[ctx.guild].insert(add_position, song_entry)  
-                    playall_song_function(ctx, discord, self)
-                except Exception as e:
-                    print(e)
+            await self.play_each_song(song_list, ctx, add_position)
+
+            if playlist_check:
+                await ctx.send(f">>> \nAdded to Q: \n{len(song_list)} songs added by [{self.entry['user'][0:-5]}] at index {add_position}\n.")
 
             return len(song_list)
 
+        elif http_check != None:
+            await ctx.send(">>> ------------------Link not supported------------------\
+                    \n (Only Youtube and Spotify Link work) \n------------------Try again------------------ 😅\n.")
+            return
+
         else:
-            self.build_entry(ctx, playlist_url)
+            song_info, yt_code = self.get_yt_code(playlist_url)
+            self.build_entry(ctx, song_info, yt_code)
             self.guild[ctx.guild].insert(add_position, self.entry) 
+            await playall_song_function(ctx, discord, self)
             return 1
-        
+    
+    async def play_each_song(self, song_list, ctx, add_position):
+        print(song_list)
+        for song in song_list:
+            try:
+                print("Its a playlist 👍")
+                song_info, yt_code = self.get_yt_code(song)
+                song_entry = self.build_entry(ctx, song_info, yt_code)
+                self.guild[ctx.guild].insert(add_position, song_entry)  
+                await playall_song_function(ctx, discord, self)
+            except Exception as e:
+                print(e)
+
     def yt_dl_info(self, yt_code):
         with youtube_dl.YoutubeDL(self.ydl_opts) as ydl:
             song_info = ydl.extract_info(
@@ -110,8 +125,8 @@ class Q:
 
         return song_info, yt_code
 
-    def build_entry(self, ctx, search_term):
-        song_info, yt_code = self.get_yt_code(search_term)
+    def build_entry(self, ctx, song_info, yt_code):
+        # song_info, yt_code = self.get_yt_code(search_term)
         self.entry = {
             "guild": str(ctx.guild),
             "channel": str(ctx.author.voice.channel),
@@ -126,9 +141,16 @@ class Q:
 
     async def add_entry(self, ctx, playlist_url, startpoint, endpoint, position):
         if ctx.guild not in self.guild:
-            self.index[ctx.guild] = INITIAL_INDEX_VALUE
+            self.index[ctx.guild] = self.INITIAL_INDEX_VALUE
             self.guild[ctx.guild] = list()
             self.loop[ctx.guild] = False
+        self.q_range = {
+            ctx.guild : {
+                "startpoint" : startpoint,
+                "endpoint" : endpoint,
+                "position" : position,
+            }
+        }
         print(ctx.guild)
         num_of_songs = await self.check_input(ctx, playlist_url, startpoint, endpoint, position)
         return self.entry, num_of_songs
@@ -179,7 +201,7 @@ class Q:
             self.save_data(ctx)
 
         self.guild[ctx.guild].clear()
-        self.index[ctx.guild] = INITIAL_INDEX_VALUE
+        self.index[ctx.guild] = self.INITIAL_INDEX_VALUE
 
 
     def nowplaying(self, ctx, arg="name"):

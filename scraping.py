@@ -27,7 +27,7 @@ def youtube(url):
         url = f"https://www.youtube.com/playlist?list={playlist_id}"
     elif single:
         video_id = re.findall(r'watch\?v=(.{11})', url)[0]
-        url = f"https://www.youtube.com/watch\?v={video_id}"
+        url = f"https://www.youtube.com/watch?v={video_id}"
 
 
     page = requests.get(url)
