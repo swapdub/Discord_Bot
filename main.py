@@ -82,9 +82,9 @@ async def loop(ctx):
 @bot.command(aliases=['sh'])
 async def shuffle(ctx):
     if que.shuffle_switch(ctx):
-        await ctx.send(f">>> Now shuffleing Queue")
+        await ctx.send(f">>> Now shuffling Queue")
     else:
-        await ctx.send(f">>> Queue shuffleing disabled")
+        await ctx.send(f">>> Queue shuffling disabled")
 
 
 @bot.command(aliases=['t'])
