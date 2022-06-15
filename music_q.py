@@ -172,6 +172,7 @@ class Q:
             random = randint(0, len(self.guild[ctx.guild]) - 1)
             print(f"Index is : {random}")
             self.index[ctx.guild] = random
+            return self.index[ctx.guild]
             
         self.index[ctx.guild] += 1
         if self.index[ctx.guild] > len(self.guild[ctx.guild]) - 1:
