@@ -110,7 +110,7 @@ async def play(ctx, *arg):
         STARTPOINT = 0
         ENDPOINT = None
     else:
-        if len(arg) > 3:
+        if len(arg) >= 3:
             STARTPOINT = int(arg[-2])
             ENDPOINT = int(arg[-1])
             arg = " ".join(arg[0:-2])
@@ -144,7 +144,7 @@ async def playnext(ctx, *arg):
         STARTPOINT = 0
         ENDPOINT = None
     else:
-        if len(arg) > 3:
+        if len(arg) >= 3:
             STARTPOINT = int(arg[-2])
             ENDPOINT = int(arg[-1])
             arg = " ".join(arg[0:-2])
