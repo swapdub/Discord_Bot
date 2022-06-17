@@ -2,6 +2,7 @@
 import os
 import re
 import json
+import math
 import discord
 from discord.ext import commands
 
@@ -207,10 +208,13 @@ async def prev(ctx):
     await ctx.send(f">>> Now Playing: \n{que.index[ctx.guild] + 1}.{que.nowplaying(ctx)} [{que.nowplaying(ctx, 'user')}] \n.")
 
 @bot.command(aliases=['q'])
-async def queue(ctx, page = 1):
+async def queue(ctx, page = False):
     page_size = 8
     songs = len(que.guild[ctx.guild])
     num_of_pages = [round(songs/page_size), round(songs/page_size) + 1][round(songs/page_size) < (songs/page_size)]
+    if not page:
+        page = math.floor(que.index[ctx.guild] / 8) + 1     # default page
+    
     await ctx.send(f"```css\n.Page_{page}_of_{num_of_pages} | .Total_number_of_Songs: {songs}\
         \n\n{que.my_que(ctx, page, page_size)}```")
 
