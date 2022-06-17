@@ -178,7 +178,7 @@ async def ping(ctx):
 @bot.command(aliases=['np'])
 async def nowplaying(ctx, *, arg = "name"):
     if ctx.voice_client.is_playing():
-        await ctx.send(f">>> Now playing: \n{que.index[ctx.guild] + 1}. {que.nowplaying(ctx, arg)}")
+        await ctx.send(f">>> Now playing: \n{que.index[ctx.guild] + 1}. {que.nowplaying(ctx, arg)} [{que.nowplaying(ctx, 'user')}]")
     else:
         await ctx.send(f">>> No song playing rn")
 
