@@ -2,6 +2,7 @@ from random import randint
 import re
 import json
 import requests
+import asyncio
 import datetime
 from collections import deque
 import youtube_dl
@@ -10,7 +11,7 @@ import scraping
 import discord
 
 import spotify
-from utils import *
+# from utils import *
 
 # Logic : We have a dict with keys as 'Discord Server(ctx.guild)' name. 
 #         Value is the que which is deque from collections library optimized 
@@ -89,7 +90,7 @@ class Q:
             song_info, yt_code = self.get_yt_code(playlist_url)
             self.build_entry(ctx, song_info, yt_code)
             self.guild[ctx.guild].insert(add_position, self.entry) 
-            await playall_song_function(ctx, discord, self)
+            await self.playall_song_function(ctx, discord)
             await self.song_add_disp_msg(playlist_check, ctx, song_info, add_position)
             return 1
     
@@ -110,7 +111,7 @@ class Q:
                 song_info, yt_code = self.get_yt_code(song)
                 song_entry = self.build_entry(ctx, song_info, yt_code)
                 self.guild[ctx.guild].insert(add_position, song_entry)  
-                await playall_song_function(ctx, discord, self)
+                await self.playall_song_function(ctx, discord)
             except Exception as e:
                 print(e)
 
@@ -295,6 +296,60 @@ class Q:
             with open(FILENAME, "w+") as fileW:
                 json.dump(old_data, fileW, indent=2)
         return
+
+    async def empty_channel_check(self, ctx):
+        members = ctx.me.voice.channel.members
+        print("NOT dc-ing")
+        if len(members) <= 1:
+            print("dc-ing")
+            self.clear_que(ctx, 'y')
+            await ctx.voice_client.disconnect()
+
+    # async def playall_song_function(self, ctx, discord):
+    #     self.play_song_function(ctx, discord)
+
+    async def playall_song_function(self, ctx, discord):
+        await self.empty_channel_check(ctx)
+
+        # Fixes randomly skipping music due to errors
+        ffmpeg_options = {
+        'options': '-vn',
+        "before_options": "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5"
+        }
+        vcclient = ctx.voice_client
+        if not vcclient.is_playing():
+            guild_queue = self.guild[ctx.guild]
+            song = guild_queue[self.next_track(ctx)]
+            vcclient.play(discord.FFmpegPCMAudio(song["url"], **ffmpeg_options), after = lambda func: self.play_song_function(ctx, discord))
+            vcclient.source = discord.PCMVolumeTransformer(vcclient.source)
+            vcclient.source.volume = 1
+
+    def play_song_function(self, ctx, discord):
+        # Architecture:
+        #   call song -> check if playing -> not playing: play now
+        #                                   |
+        #                                   -> playing: wait
+    
+        # Fixes randomly skipping music due to errors
+        ffmpeg_options = {
+        'options': '-vn',
+        "before_options": "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5"
+        }
+
+        print(f'First it is : {self.index[ctx.guild]}')
+        vcclient = ctx.voice_client
+        
+        if not vcclient.is_playing():
+
+            guild_queue = self.guild[ctx.guild]
+            song = guild_queue[self.next_track(ctx)]
+            vcclient.play(discord.FFmpegPCMAudio(song["url"], **ffmpeg_options), after = lambda func: self.play_song_function(ctx, discord))
+            vcclient.source = discord.PCMVolumeTransformer(vcclient.source)
+            vcclient.source.volume = 1
+            print(f'middle it is : {self.index[ctx.guild]}')
+        print(f'last it is : {self.index[ctx.guild]}')
+
+
 
 
 if __name__ == "__main__":
