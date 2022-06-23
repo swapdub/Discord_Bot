@@ -208,10 +208,11 @@ async def prev(ctx):
     await ctx.send(f">>> Now Playing: \n{que.index[ctx.guild] + 1}.{que.nowplaying(ctx)} [{que.nowplaying(ctx, 'user')}] \n.")
 
 @bot.command(aliases=['q'])
-async def queue(ctx, page = False):
+async def queue(ctx, page:int = 0):
     page_size = 8
     songs = len(que.guild[ctx.guild])
     num_of_pages = [round(songs/page_size), round(songs/page_size) + 1][round(songs/page_size) < (songs/page_size)]
+    print(page)
     if not page:
         page = math.floor(que.index[ctx.guild] / 8) + 1     # default page
     
