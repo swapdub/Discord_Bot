@@ -1,6 +1,8 @@
+from random import randint
 import re
 import json
 import requests
+import asyncio
 import datetime
 from collections import deque
 import youtube_dl
@@ -9,7 +11,7 @@ import scraping
 import discord
 
 import spotify
-from utils import *
+# from utils import *
 
 # Logic : We have a dict with keys as 'Discord Server(ctx.guild)' name. 
 #         Value is the que which is deque from collections library optimized 
@@ -38,7 +40,7 @@ class Q:
         self.index = dict()
         self.entry = dict()
         self.loop = dict()
-        self.q_range = dict()
+        self.shuffle = dict()
 
 
     async def check_input(self, ctx, playlist_url, startpoint, endpoint, add_position):
@@ -55,17 +57,16 @@ class Q:
                 await ctx.send(">>> Please wait ...")
 
             try:
-                song_list = scraping.youtube(playlist_url)[int(startpoint):int(endpoint) if endpoint else None]
+                print(f"endpoint is: {endpoint}")
+                song_list = scraping.youtube(playlist_url)[int(startpoint):endpoint]
+                await self.play_each_song(song_list, ctx, add_position)
+                await self.song_add_disp_msg(playlist_check, ctx, song_list, add_position)
+                return len(song_list)
             except:
                 await ctx.send(">>> ------------------Link not supported------------------\
                      \n (Youtube Mixes and private links not available from YT API) \n------------------Try again------------------ 😅\n.")
                 return
-            await self.play_each_song(song_list, ctx, add_position)
 
-            if playlist_check:
-                await ctx.send(f">>> \nAdded to Q: \n{len(song_list)} songs added by [{self.entry['user'][0:-5]}] at index {add_position}\n.")
-
-            return len(song_list)
         
         elif spotify_check != None:
             playlist_check = re.search('playlist', playlist_url)
@@ -74,12 +75,9 @@ class Q:
             else:
                 await ctx.send(">>> Please wait ...")
 
-            song_list = spotify.get_song_list(playlist_url)[int(startpoint):int(endpoint) if endpoint else None]
+            song_list = spotify.get_song_list(playlist_url)[int(startpoint):endpoint]
             await self.play_each_song(song_list, ctx, add_position)
-
-            if playlist_check:
-                await ctx.send(f">>> \nAdded to Q: \n{len(song_list)} songs added by [{self.entry['user'][0:-5]}] at index {add_position}\n.")
-
+            await self.song_add_disp_msg(playlist_check, ctx, song_list, add_position)
             return len(song_list)
 
         elif http_check != None:
@@ -88,21 +86,32 @@ class Q:
             return
 
         else:
+            playlist_check = False
             song_info, yt_code = self.get_yt_code(playlist_url)
             self.build_entry(ctx, song_info, yt_code)
             self.guild[ctx.guild].insert(add_position, self.entry) 
-            await playall_song_function(ctx, discord, self)
+            await self.playall_song_function(ctx, discord)
+            await self.song_add_disp_msg(playlist_check, ctx, song_info, add_position)
             return 1
     
+    async def song_add_disp_msg(self, playlist_check, ctx, song_list, add_position):
+        if playlist_check:
+            await ctx.send(f">>> \nAdded to Q: \n{len(song_list)} songs added by [{self.entry['user'][0:-5]}] at index {add_position+1}\n.")
+        else:
+            if self.index[ctx.guild] != add_position:
+               await ctx.send(f">>> \nAdded to Q: \n{add_position+1}. {self.entry['name']} 🎶 [{self.entry['user'][0:-5]}] \n.")
+            else:
+               await ctx.send(f">>> \nNow Playing: \n{add_position+1}. {self.entry['name']} 🎶 [{self.entry['user'][0:-5]}] \n.")
+
+    
     async def play_each_song(self, song_list, ctx, add_position):
-        print(song_list)
+        print("Its a playlist 👍")
         for song in song_list:
             try:
-                print("Its a playlist 👍")
                 song_info, yt_code = self.get_yt_code(song)
                 song_entry = self.build_entry(ctx, song_info, yt_code)
                 self.guild[ctx.guild].insert(add_position, song_entry)  
-                await playall_song_function(ctx, discord, self)
+                await self.playall_song_function(ctx, discord)
             except Exception as e:
                 print(e)
 
@@ -144,14 +153,8 @@ class Q:
             self.index[ctx.guild] = self.INITIAL_INDEX_VALUE
             self.guild[ctx.guild] = list()
             self.loop[ctx.guild] = False
-        self.q_range = {
-            ctx.guild : {
-                "startpoint" : startpoint,
-                "endpoint" : endpoint,
-                "position" : position,
-            }
-        }
-        print(ctx.guild)
+            self.shuffle[ctx.guild] = False
+
         num_of_songs = await self.check_input(ctx, playlist_url, startpoint, endpoint, position)
         return self.entry, num_of_songs
 
@@ -166,6 +169,12 @@ class Q:
 
 
     def next_track(self, ctx):
+        if self.shuffle[ctx.guild]:
+            random = randint(0, len(self.guild[ctx.guild]) - 1)
+            print(f"Index is : {random}")
+            self.index[ctx.guild] = random
+            return self.index[ctx.guild]
+            
         self.index[ctx.guild] += 1
         if self.index[ctx.guild] > len(self.guild[ctx.guild]) - 1:
             if self.loop[ctx.guild]:
@@ -183,6 +192,15 @@ class Q:
             self.loop[ctx.guild] = False
         print(f'Currently Looping: {self.loop[ctx.guild]}')
         return self.loop[ctx.guild]
+
+
+    def shuffle_switch(self, ctx):
+        if self.shuffle[ctx.guild] == False:
+            self.shuffle[ctx.guild] = True
+        elif self.shuffle[ctx.guild] == True:
+            self.shuffle[ctx.guild] = False
+        print(f'Currently shuffleing: {self.shuffle[ctx.guild]}')
+        return self.shuffle[ctx.guild]
 
 
     def prev_track(self, ctx):
@@ -278,6 +296,60 @@ class Q:
             with open(FILENAME, "w+") as fileW:
                 json.dump(old_data, fileW, indent=2)
         return
+
+    async def empty_channel_check(self, ctx):
+        members = ctx.me.voice.channel.members
+        print("NOT dc-ing")
+        if len(members) <= 1:
+            print("dc-ing")
+            self.clear_que(ctx, 'y')
+            await ctx.voice_client.disconnect()
+
+    # async def playall_song_function(self, ctx, discord):
+    #     self.play_song_function(ctx, discord)
+
+    async def playall_song_function(self, ctx, discord):
+        await self.empty_channel_check(ctx)
+
+        # Fixes randomly skipping music due to errors
+        ffmpeg_options = {
+        'options': '-vn',
+        "before_options": "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5"
+        }
+        vcclient = ctx.voice_client
+        if not vcclient.is_playing():
+            guild_queue = self.guild[ctx.guild]
+            song = guild_queue[self.next_track(ctx)]
+            vcclient.play(discord.FFmpegPCMAudio(song["url"], **ffmpeg_options), after = lambda func: self.play_song_function(ctx, discord))
+            vcclient.source = discord.PCMVolumeTransformer(vcclient.source)
+            vcclient.source.volume = 1
+
+    def play_song_function(self, ctx, discord):
+        # Architecture:
+        #   call song -> check if playing -> not playing: play now
+        #                                   |
+        #                                   -> playing: wait
+    
+        # Fixes randomly skipping music due to errors
+        ffmpeg_options = {
+        'options': '-vn',
+        "before_options": "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5"
+        }
+
+        print(f'First it is : {self.index[ctx.guild]}')
+        vcclient = ctx.voice_client
+        
+        if not vcclient.is_playing():
+
+            guild_queue = self.guild[ctx.guild]
+            song = guild_queue[self.next_track(ctx)]
+            vcclient.play(discord.FFmpegPCMAudio(song["url"], **ffmpeg_options), after = lambda func: self.play_song_function(ctx, discord))
+            vcclient.source = discord.PCMVolumeTransformer(vcclient.source)
+            vcclient.source.volume = 1
+            print(f'middle it is : {self.index[ctx.guild]}')
+        print(f'last it is : {self.index[ctx.guild]}')
+
+
 
 
 if __name__ == "__main__":
