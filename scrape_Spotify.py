@@ -74,7 +74,7 @@ class Spotify():
         for item in data_response['tracks']['items']:
             song_list.append(f"{item['track']['name']} by {item['track']['artists'][0]['name']}")
         print(song_list)
-        return song_list[::-1]
+        return song_list
 
     def req_spotify_api(self, user_url):
         access_token = self.read_my_token()

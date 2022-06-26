@@ -104,15 +104,26 @@ class Q:
 
     
     async def play_each_song(self, song_list, ctx, add_position):
-        print("Its a playlist 👍")
-        for song in song_list:
-            try:
-                song_info, yt_code = self.get_yt_code(song)
-                song_entry = self.build_entry(ctx, song_info, yt_code)
-                self.guild[ctx.guild].insert(add_position, song_entry)  
-                await self.playall_song_function(ctx, discord)
-            except Exception as e:
-                print(e)
+        try:
+            song_info, yt_code = self.get_yt_code(song_list[0])
+            song_entry = self.build_entry(ctx, song_info, yt_code)
+            self.guild[ctx.guild].insert(add_position, song_entry)  
+            await self.playall_song_function(ctx, discord)
+        except Exception as e:
+            print(e)
+
+        if len(song_list) >= 1:
+            print("Its a playlist 👍")
+            # add_position + 1 needed for reverse playlist glitch fix
+            song_list = song_list[::-1]
+            for song in song_list[0:-1]:
+                try:
+                    song_info, yt_code = self.get_yt_code(song)
+                    song_entry = self.build_entry(ctx, song_info, yt_code)
+                    self.guild[ctx.guild].insert(add_position + 1, song_entry)  
+                    await self.playall_song_function(ctx, discord)
+                except Exception as e:
+                    print(e)
 
     def yt_dl_info(self, yt_code):
         with youtube_dl.YoutubeDL(self.ydl_opts) as ydl:
